@@ -195,7 +195,7 @@ python source/build_v3.py \
   --playoffs
 ```
 
-## Defensible podcast claims under v3
+## Defensible claims under v3
 
 - "Hits double in the playoffs."
 - "Physical penalties (boarding, charging, cross-checking) more than double in playoffs."
