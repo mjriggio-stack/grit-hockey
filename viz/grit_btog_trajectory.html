@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blue → Green Transitions — GRIT v3</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --green:#1D9E75; --blue:#378ADD; --red:#E24B4A; --gray:#6B7280;
+    --bg:#0D1117; --surface:#161B22; --border:#30363D;
+    --text:#E6EDF3; --muted:#8B949E;
+  }
+  body { font-family: sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
+  h1 { font-size: clamp(18px,3vw,28px); font-weight: 800; text-transform: uppercase; letter-spacing:.04em; color: var(--blue); margin-bottom: 4px; }
+  .subtitle { font-size: 12px; color: var(--muted); margin-bottom: 18px; max-width: 600px; line-height: 1.5; }
+  .findings { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap: 10px; margin-bottom: 20px; }
+  .finding { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; }
+  .finding-val { font-size: 28px; font-weight: 800; line-height: 1; margin-bottom: 4px; }
+  .finding-label { font-size: 11px; color: var(--muted); line-height: 1.4; }
+  .section { margin-bottom: 28px; }
+  .sec-head { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing:.06em; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  .ctrl { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+  label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing:.06em; color: var(--muted); }
+  select { font-size: 12px; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 5px 8px; border-radius: 4px; outline: none; }
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap: 8px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; transition: border-color .15s; }
+  .card:hover { border-color: var(--blue); }
+  .card.sustained { border-left: 3px solid var(--green); }
+  .card.regressed { border-left: 3px solid var(--red); }
+  .card.pending  { border-left: 3px solid var(--muted); }
+  .card-name { font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing:.03em; margin-bottom: 2px; }
+  .card-meta { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+  .pts-flow { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 12px; }
+  .pts-box { padding: 2px 8px; border-radius: 3px; font-weight: 600; min-width: 32px; text-align: center; }
+  .arrow { color: var(--muted); font-size: 14px; }
+  .traj-row { display: flex; gap: 3px; margin-top: 6px; }
+  .traj-sq { width: 22px; height: 22px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .traj-lbl { font-size: 9px; color: var(--muted); text-align: center; margin-top: 2px; }
+  .traj-wrap { display: flex; flex-direction: column; align-items: center; }
+  .gz-row { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .gz-row strong { color: var(--text); }
+  .delta-badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 6px; border-radius: 3px; }
+  .pos-delta { background: rgba(29,158,117,.2); color: var(--green); }
+  .scatter-wrap { position: relative; background: #1C2733; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
+  canvas { display: block; width: 100%; cursor: crosshair; }
+  #tip { position: fixed; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; font-size: 12px; pointer-events: none; display: none; z-index: 100; max-width: 220px; line-height: 1.7; box-shadow: 0 4px 16px rgba(0,0,0,.5); }
+  .tip-name { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing:.03em; color: var(--blue); margin-bottom: 3px; }
+</style>
+</head>
+<body>
+
+<h1>Blue → Green Transitions</h1>
+<p class="subtitle">Players who crossed from physical/low-scoring to earning their points across five seasons (2019-20 through 2024-25). Every crossing came with a points increase. 46% sustained Green the following season.</p>
+
+<div class="findings">
+  <div class="finding"><div class="finding-val" style="color:var(--blue)">36</div><div class="finding-label">Total B→G transitions across 4 season pairs</div></div>
+  <div class="finding"><div class="finding-val" style="color:var(--green)">+18.1</div><div class="finding-label">Mean points increase at crossing</div></div>
+  <div class="finding"><div class="finding-val" style="color:var(--green)">46%</div><div class="finding-label">Sustained Green the following season</div></div>
+  <div class="finding"><div class="finding-val" style="color:var(--green)">0</div><div class="finding-label">Crossings with a points decrease</div></div>
+  <div class="finding"><div class="finding-val" style="color:var(--blue)">44%</div><div class="finding-label">Crossed under age 25</div></div>
+  <div class="finding"><div class="finding-val" style="color:var(--muted)">26.4</div><div class="finding-label">Mean age at crossing</div></div>
+</div>
+
+<div class="section">
+  <div class="sec-head" style="color:var(--blue)">Age at Crossing vs Points Increase</div>
+  <div class="scatter-wrap"><canvas id="scatter" height="320"></canvas></div>
+</div>
+
+<div class="section">
+  <div class="ctrl">
+    <div class="sec-head" style="color:var(--blue);margin:0">Transition Cards</div>
+    <div style="margin-left:16px;display:flex;gap:10px;align-items:center;">
+      <label>Filter</label>
+      <select id="filter" onchange="renderCards()">
+        <option value="">All</option>
+        <option value="sustained">Sustained Green</option>
+        <option value="regressed">Regressed</option>
+        <option value="young">Under 25</option>
+      </select>
+      <label>Sort</label>
+      <select id="sort" onchange="renderCards()">
+        <option value="age">Age at crossing</option>
+        <option value="delta">Points increase</option>
+        <option value="pair">Season pair</option>
+      </select>
+    </div>
+  </div>
+  <div class="card-grid" id="cards"></div>
+</div>
+
+<div id="tip"></div>
+
+<script>
+const QC = {G:'#1D9E75',B:'#378ADD',R:'#E24B4A','—':'#30363D',GRAY:'#6B7280'};
+const SEASON_LABELS = {'2020':"'20",'2022':"'22",'2023':"'23",'2024':"'24",'2025':"'25"};
+
+const DATA = [
+  {name:"Alexis Lafrenière",pos:"L",pair:"2022→2023",y1:"2022",y2:"2023",age:20,gz1:0.311,gz2:0.200,pts1:31,pts2:39,next_quad:"RED",next_pts:57,traj:"—-B-G-R-R"},
+  {name:"Barrett Hayton",pos:"C",pair:"2022→2023",y1:"2022",y2:"2023",age:21,gz1:0.989,gz2:0.484,pts1:24,pts2:43,next_quad:"BLUE",next_pts:25,traj:"—-B-G-B-—"},
+  {name:"Will Cuylle",pos:"L",pair:"2024→2025",y1:"2024",y2:"2025",age:21,gz1:1.907,gz2:1.809,pts1:21,pts2:38,next_quad:null,next_pts:null,traj:"—-—-B-B-G"},
+  {name:"Matthew Knies",pos:"L",pair:"2024→2025",y1:"2024",y2:"2025",age:21,gz1:1.000,gz2:0.797,pts1:35,pts2:66,next_quad:null,next_pts:null,traj:"—-—-B-—-G"},
+  {name:"Joel Eriksson Ek",pos:"C",pair:"2020→2022",y1:"2020",y2:"2022",age:22,gz1:0.909,gz2:1.348,pts1:29,pts2:49,next_quad:"GREEN",next_pts:61,traj:"B-G-G-G-G"},
+  {name:"Owen Tippett",pos:"R",pair:"2022→2023",y1:"2022",y2:"2023",age:22,gz1:0.199,gz2:0.330,pts1:21,pts2:49,next_quad:"GREEN",next_pts:53,traj:"—-B-G-G-G"},
+  {name:"Peyton Krebs",pos:"C",pair:"2024→2025",y1:"2024",y2:"2025",age:22,gz1:0.085,gz2:0.559,pts1:17,pts2:39,next_quad:null,next_pts:null,traj:"—-G-B-B-G"},
+  {name:"Sam Bennett",pos:"C",pair:"2020→2022",y1:"2020",y2:"2022",age:23,gz1:0.473,gz2:0.828,pts1:12,pts2:49,next_quad:"GREEN",next_pts:40,traj:"B-G-G-G-G"},
+  {name:"Ivan Barbashev",pos:"C",pair:"2020→2022",y1:"2020",y2:"2022",age:24,gz1:0.946,gz2:0.104,pts1:26,pts2:60,next_quad:"GREEN",next_pts:45,traj:"B-G-R-R-G"},
+  {name:"Lawson Crouse",pos:"L",pair:"2022→2023",y1:"2022",y2:"2023",age:24,gz1:1.061,gz2:0.525,pts1:34,pts2:45,next_quad:"GREEN",next_pts:42,traj:"—-B-G-G-G"},
+  {name:"Morgan Geekie",pos:"C",pair:"2023→2024",y1:"2023",y2:"2024",age:24,gz1:0.452,gz2:0.464,pts1:28,pts2:39,next_quad:"RED",next_pts:68,traj:"—-R-B-G-R"},
+  {name:"Ryan Poehling",pos:"C",pair:"2024→2025",y1:"2024",y2:"2025",age:24,gz1:0.640,gz2:0.421,pts1:28,pts2:36,next_quad:null,next_pts:null,traj:"—-G-B-B-G"},
+  {name:"Noah Cates",pos:"L",pair:"2024→2025",y1:"2024",y2:"2025",age:24,gz1:0.149,gz2:1.004,pts1:18,pts2:47,next_quad:null,next_pts:null,traj:"—-—-G-B-G"},
+  {name:"Ryan Hartman",pos:"R",pair:"2020→2022",y1:"2020",y2:"2022",age:25,gz1:0.350,gz2:0.649,pts1:20,pts2:65,next_quad:"GREEN",next_pts:37,traj:"B-G-G-G-G"},
+  {name:"Anthony Cirelli",pos:"C",pair:"2023→2024",y1:"2023",y2:"2024",age:25,gz1:0.902,gz2:0.240,pts1:29,pts2:45,next_quad:"GREEN",next_pts:52,traj:"G-G-B-G-G"},
+  {name:"Nicolas Roy",pos:"C",pair:"2023→2024",y1:"2023",y2:"2024",age:25,gz1:0.467,gz2:0.215,pts1:30,pts2:41,next_quad:"BLUE",next_pts:25,traj:"—-G-B-G-B"},
+  {name:"Boone Jenner",pos:"C",pair:"2020→2022",y1:"2020",y2:"2022",age:26,gz1:1.664,gz2:1.308,pts1:24,pts2:44,next_quad:"GREEN",next_pts:45,traj:"B-G-G-—-G"},
+  {name:"J.T. Compher",pos:"L",pair:"2022→2023",y1:"2022",y2:"2023",age:26,gz1:0.440,gz2:1.063,pts1:33,pts2:52,next_quad:"GREEN",next_pts:48,traj:"B-B-G-G-B"},
+  {name:"Ross Colton",pos:"C",pair:"2023→2024",y1:"2023",y2:"2024",age:26,gz1:1.274,gz2:1.119,pts1:32,pts2:40,next_quad:"BLUE",next_pts:24,traj:"—-G-B-G-B"},
+  {name:"Warren Foegele",pos:"L",pair:"2023→2024",y1:"2023",y2:"2024",age:26,gz1:0.510,gz2:0.080,pts1:28,pts2:41,next_quad:"GREEN",next_pts:17,traj:"—-G-B-G-G"},
+  {name:"Scott Laughton",pos:"C",pair:"2022→2023",y1:"2022",y2:"2023",age:27,gz1:1.207,gz2:0.914,pts1:30,pts2:43,next_quad:"GREEN",next_pts:39,traj:"B-B-G-B-B"},
+  {name:"Nick Paul",pos:"L",pair:"2023→2024",y1:"2023",y2:"2024",age:27,gz1:1.138,gz2:0.984,pts1:32,pts2:46,next_quad:"BLUE",next_pts:15,traj:"—-B-B-G-B"},
+  {name:"Marcus Foligno",pos:"L",pair:"2020→2022",y1:"2020",y2:"2022",age:28,gz1:1.356,gz2:1.543,pts1:25,pts2:42,next_quad:"BLUE",next_pts:21,traj:"B-G-B-B-B"},
+  {name:"Erik Haula",pos:"L",pair:"2020→2022",y1:"2020",y2:"2022",age:28,gz1:0.331,gz2:0.710,pts1:24,pts2:44,next_quad:"GREEN",next_pts:41,traj:"B-G-G-G-G"},
+  {name:"Yanni Gourde",pos:"C",pair:"2020→2022",y1:"2020",y2:"2022",age:28,gz1:0.054,gz2:0.084,pts1:30,pts2:48,next_quad:"GREEN",next_pts:48,traj:"B-G-G-—-B"},
+  {name:"Adam Lowry",pos:"C",pair:"2022→2023",y1:"2022",y2:"2023",age:28,gz1:2.321,gz2:1.283,pts1:21,pts2:36,next_quad:"BLUE",next_pts:35,traj:"B-B-G-G-B"},
+  {name:"Kiefer Sherwood",pos:"L",pair:"2024→2025",y1:"2024",y2:"2025",age:28,gz1:2.013,gz2:3.380,pts1:27,pts2:36,next_quad:null,next_pts:null,traj:"—-—-B-B-G"},
+  {name:"Jason Zucker",pos:"L",pair:"2022→2023",y1:"2022",y2:"2023",age:29,gz1:0.123,gz2:1.054,pts1:17,pts2:48,next_quad:"BLUE",next_pts:32,traj:"R-B-G-B-R"},
+  {name:"Tom Wilson",pos:"R",pair:"2024→2025",y1:"2024",y2:"2025",age:29,gz1:2.012,gz2:1.554,pts1:35,pts2:62,next_quad:null,next_pts:null,traj:"G-G-B-B-G"},
+  {name:"Nick Bjugstad",pos:"C",pair:"2023→2024",y1:"2023",y2:"2024",age:30,gz1:1.557,gz2:0.820,pts1:29,pts2:45,next_quad:"BLUE",next_pts:9,traj:"—-—-B-G-B"},
+  {name:"Jordan Staal",pos:"C",pair:"2020→2022",y1:"2020",y2:"2022",age:31,gz1:1.870,gz2:1.597,pts1:27,pts2:36,next_quad:"BLUE",next_pts:34,traj:"B-G-G-B-G"},
+  {name:"Evander Kane",pos:"L",pair:"2023→2024",y1:"2023",y2:"2024",age:31,gz1:1.327,gz2:1.382,pts1:28,pts2:44,next_quad:"BLUE",next_pts:31,traj:"G-G-B-G-B"},
+  {name:"Erik Haula",pos:"L",pair:"2024→2025",y1:"2024",y2:"2025",age:32,gz1:0.832,gz2:0.783,pts1:35,pts2:38,next_quad:null,next_pts:null,traj:"B-G-G-G-G"},
+  {name:"Jeff Carter",pos:"C",pair:"2020→2022",y1:"2020",y2:"2022",age:34,gz1:0.173,gz2:0.822,pts1:27,pts2:45,next_quad:"BLUE",next_pts:29,traj:"B-G-—-—-—"},
+  {name:"Nick Foligno",pos:"L",pair:"2023→2024",y1:"2023",y2:"2024",age:35,gz1:1.426,gz2:1.096,pts1:26,pts2:37,next_quad:"BLUE",next_pts:15,traj:"B-B-B-G-B"},
+  {name:"Jordan Staal",pos:"C",pair:"2024→2025",y1:"2024",y2:"2025",age:35,gz1:1.293,gz2:1.647,pts1:30,pts2:36,next_quad:null,next_pts:null,traj:"B-G-G-B-G"},
+];
+
+// Scatter: age vs pts delta
+const canvas = document.getElementById('scatter');
+const ctx = canvas.getContext('2d');
+const tip = document.getElementById('tip');
+const PAD = {l:50,r:20,t:20,b:40};
+let _sx=[],_sy=[],_sd=[];
+
+function drawScatter(){
+  const W=canvas.offsetWidth, H=320;
+  canvas.width=W; canvas.height=H;
+  const pw=W-PAD.l-PAD.r, ph=H-PAD.t-PAD.b;
+
+  const ages=DATA.map(d=>d.age);
+  const deltas=DATA.map(d=>d.pts2-d.pts1);
+  const aMin=Math.min(...ages)-1, aMax=Math.max(...ages)+1;
+  const dMin=0, dMax=Math.max(...deltas)+5;
+
+  function cx(a){return PAD.l+(a-aMin)/(aMax-aMin)*pw;}
+  function cy(d){return PAD.t+ph-(d-dMin)/(dMax-dMin)*ph;}
+
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=0.5;
+  for(let i=0;i<=4;i++){const y=PAD.t+i*ph/4;ctx.beginPath();ctx.moveTo(PAD.l,y);ctx.lineTo(W-PAD.r,y);ctx.stroke();}
+  for(let i=0;i<=6;i++){const x=PAD.l+i*pw/6;ctx.beginPath();ctx.moveTo(x,PAD.t);ctx.lineTo(x,H-PAD.b);ctx.stroke();}
+
+  // Age 25 line
+  ctx.setLineDash([4,4]);ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(cx(25),PAD.t);ctx.lineTo(cx(25),H-PAD.b);ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='rgba(255,255,255,0.2)';ctx.font='10px sans-serif';ctx.textAlign='center';
+  ctx.fillText('Age 25',cx(25),PAD.t+12);
+
+  // Axes
+  ctx.fillStyle='rgba(255,255,255,0.35)';ctx.font='10px sans-serif';ctx.textAlign='center';
+  ctx.fillText('Age at Crossing',PAD.l+pw/2,H-5);
+  ctx.save();ctx.translate(13,PAD.t+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText('Points Increase',0,0);ctx.restore();
+  ctx.textAlign='right';ctx.fillStyle='rgba(255,255,255,0.25)';
+  for(let i=0;i<=4;i++){const dv=dMin+i*(dMax-dMin)/4;ctx.fillText(Math.round(dv),PAD.l-4,cy(dv)+4);}
+  ctx.textAlign='center';
+  for(let i=0;i<=6;i++){const av=aMin+i*(aMax-aMin)/6;ctx.fillText(Math.round(av),cx(av),H-PAD.b+14);}
+
+  _sx=[];_sy=[];_sd=[];
+  DATA.forEach(d=>{
+    const delta=d.pts2-d.pts1;
+    const px=cx(d.age),py=cy(delta);
+    const col=d.next_quad==='GREEN'?'#1D9E75':d.next_quad==='RED'?'#E24B4A':d.next_quad?'#378ADD':'#6B7280';
+    ctx.beginPath();ctx.arc(px,py,5,0,Math.PI*2);
+    ctx.fillStyle=col+'cc';ctx.fill();
+    ctx.strokeStyle=col;ctx.lineWidth=1;ctx.stroke();
+    _sx.push(px);_sy.push(py);_sd.push(d);
+  });
+}
+
+canvas.addEventListener('mousemove',e=>{
+  const rect=canvas.getBoundingClientRect();
+  const scale=canvas.width/rect.width;
+  const mx=(e.clientX-rect.left)*scale,my=(e.clientY-rect.top)*scale;
+  let best=-1,bd=9999;
+  _sx.forEach((px,i)=>{const dist=Math.sqrt((px-mx)**2+(_sy[i]-my)**2);if(dist<bd){bd=dist;best=i;}});
+  if(best>=0&&bd<18*scale){
+    const d=_sd[best];
+    const delta=d.pts2-d.pts1;
+    const nextStr=d.next_quad?`→ ${d.next_quad} (${d.next_pts} pts)`:'→ no data';
+    tip.style.display='block';
+    tip.style.left=(e.clientX+16)+'px';
+    tip.style.top=(e.clientY-10)+'px';
+    tip.innerHTML=`<div class="tip-name">${d.name}</div>
+      <div style="font-size:11px;color:var(--muted)">${d.pos} · Age ${d.age} · ${d.pair}</div>
+      <div style="margin-top:4px;font-size:12px">PTS: ${d.pts1} → <strong>${d.pts2}</strong> <span style="color:#1D9E75">+${delta}</span></div>
+      <div style="font-size:12px">GRIT z: ${d.gz1} → ${d.gz2}</div>
+      <div style="font-size:12px">Next season: ${nextStr}</div>`;
+  } else tip.style.display='none';
+});
+canvas.addEventListener('mouseleave',()=>tip.style.display='none');
+
+function renderCards(){
+  const filter=document.getElementById('filter').value;
+  const sort=document.getElementById('sort').value;
+
+  let data=[...DATA];
+  if(filter==='sustained') data=data.filter(d=>d.next_quad==='GREEN');
+  else if(filter==='regressed') data=data.filter(d=>d.next_quad&&d.next_quad!=='GREEN');
+  else if(filter==='young') data=data.filter(d=>d.age<=25);
+
+  if(sort==='age') data.sort((a,b)=>a.age-b.age);
+  else if(sort==='delta') data.sort((a,b)=>(b.pts2-b.pts1)-(a.pts2-a.pts1));
+  else if(sort==='pair') data.sort((a,b)=>a.pair.localeCompare(b.pair));
+
+  const TRAJ_COLORS={G:'#1D9E75',B:'#378ADD',R:'#E24B4A','—':'#30363D'};
+  const SEASON_LBLS=['\'20','\'22','\'23','\'24','\'25'];
+
+  const cards=data.map(d=>{
+    const delta=d.pts2-d.pts1;
+    const sustained=d.next_quad==='GREEN';
+    const cls=d.next_quad===null?'pending':sustained?'sustained':'regressed';
+    const nextStr=d.next_quad?`${d.next_quad} · ${d.next_pts} pts`:'Current season';
+
+    const trajParts=d.traj.split('-');
+    const trajHtml=trajParts.map((s,i)=>`
+      <div class="traj-wrap">
+        <div class="traj-sq" style="background:${TRAJ_COLORS[s]||'#30363D'}">${s==='—'?'·':s}</div>
+        <div class="traj-lbl">${SEASON_LBLS[i]}</div>
+      </div>`).join('');
+
+    return `<div class="card ${cls}">
+      <div class="card-name">${d.name}</div>
+      <div class="card-meta">${d.pos} · ${d.pair} · Age ${d.age}</div>
+      <div class="pts-flow">
+        <span class="pts-box" style="background:rgba(55,138,221,.15);color:#378ADD">${d.pts1} pts</span>
+        <span class="arrow">→</span>
+        <span class="pts-box" style="background:rgba(29,158,117,.15);color:#1D9E75">${d.pts2} pts</span>
+        <span class="delta-badge pos-delta">+${delta}</span>
+      </div>
+      <div class="gz-row">GRIT z: <strong>${d.gz1}</strong> → <strong>${d.gz2}</strong></div>
+      <div class="traj-row">${trajHtml}</div>
+      <div style="margin-top:6px;font-size:11px;color:var(--muted)">Next: <strong style="color:${d.next_quad==='GREEN'?'#1D9E75':d.next_quad==='RED'?'#E24B4A':d.next_quad?'#378ADD':'var(--muted)'}">${nextStr}</strong></div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('cards').innerHTML=cards;
+}
+
+window.addEventListener('resize',drawScatter);
+drawScatter();
+renderCards();
+</script>
+</body>
+</html>
