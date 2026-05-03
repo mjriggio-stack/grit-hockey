@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GRIT v3 — Year-over-Year Stability</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0D1117;--surface:#161B22;--border:#30363D;--text:#E6EDF3;--muted:#8B949E;
+    --green:#1D9E75;--amber:#F59E0B;--blue:#378ADD;--ice:#1C2733;
+  }
+  body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:24px}
+  header{margin-bottom:24px;border-bottom:1px solid var(--border);padding-bottom:16px}
+  h1{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:clamp(20px,3.5vw,32px);text-transform:uppercase;letter-spacing:.02em;color:var(--amber)}
+  .season-tag{font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-top:2px}
+  .subtitle{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.6;max-width:660px}
+  .chart-wrap{background:var(--ice);border:1px solid var(--border);border-radius:8px;padding:24px 20px 16px;margin-bottom:20px}
+  canvas{display:block;width:100%}
+  .legend{display:flex;gap:24px;flex-wrap:wrap;margin-top:16px;font-size:12px;color:var(--muted)}
+  .leg-item{display:flex;align-items:center;gap:7px}
+  .leg-line{width:28px;height:3px;border-radius:2px;flex-shrink:0}
+  .leg-line.dashed{background:repeating-linear-gradient(90deg,currentColor 0,currentColor 6px,transparent 6px,transparent 10px)}
+  .finding-box{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--amber);border-radius:6px;padding:16px 18px;margin-bottom:16px}
+  .finding-box h3{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;text-transform:uppercase;letter-spacing:.06em;color:var(--amber);margin-bottom:8px}
+  .finding-box p{font-size:13px;color:var(--muted);line-height:1.6}
+  .finding-box p strong{color:var(--text)}
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:14px 16px}
+  .stat-card .val{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:900;color:var(--text);line-height:1}
+  .stat-card .label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:4px}
+  .stat-card .sub{font-size:11px;color:var(--muted);margin-top:2px}
+  #tip{position:fixed;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:9px 12px;font-size:12px;pointer-events:none;display:none;z-index:100;line-height:1.7;box-shadow:0 4px 16px rgba(0,0,0,.5)}
+</style>
+</head>
+<body>
+<header>
+  <h1>GRIT v3 — Year-over-Year Stability</h1>
+  <div class="season-tag">All skaters · 2015-16 through 2025-26</div>
+  <p class="subtitle">Pearson r between consecutive season GRIT z-scores compared against points. A higher r means a player's ranking relative to peers is more stable year to year. The 2019-20 to 2021-22 pair spans the COVID bubble and lockout gap.</p>
+</header>
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="val" style="color:var(--green)">0.877</div>
+    <div class="label">Avg GRIT z stability</div>
+    <div class="sub">All skaters, consecutive seasons</div>
+  </div>
+  <div class="stat-card">
+    <div class="val" style="color:var(--blue)">0.876</div>
+    <div class="label">Avg GRIT z stability</div>
+    <div class="sub">Forwards only</div>
+  </div>
+  <div class="stat-card">
+    <div class="val" style="color:var(--muted)">0.809</div>
+    <div class="label">Avg Points stability</div>
+    <div class="sub">Forwards only</div>
+  </div>
+  <div class="stat-card">
+    <div class="val" style="color:var(--amber)">+0.068</div>
+    <div class="label">GRIT advantage</div>
+    <div class="sub">More stable than points every season pair</div>
+  </div>
+</div>
+
+<div class="finding-box">
+  <h3>Key Finding</h3>
+  <p>GRIT z is more stable year-over-year than points <strong>across every single season pair</strong> in the dataset. The average gap is <strong>+0.068 r</strong> in favor of GRIT. This means a player's physical contribution rank relative to their peers is a more persistent signal than their scoring rank. The metric captures something structural about how players play, not just what they produced in a given year.</p>
+</div>
+
+<div class="chart-wrap">
+  <canvas id="c" height="360"></canvas>
+  <div class="legend">
+    <span class="leg-item"><span class="leg-line" style="background:var(--green)"></span>GRIT z (all skaters)</span>
+    <span class="leg-item"><span class="leg-line" style="background:var(--blue)"></span>GRIT z (forwards only)</span>
+    <span class="leg-item"><span class="leg-line" style="background:var(--muted)"></span>Points (forwards only)</span>
+    <span class="leg-item" style="margin-left:auto;font-size:11px;color:var(--muted)">* = bubble/lockout gap year</span>
+  </div>
+</div>
+
+<div id="tip"></div>
+
+<script>
+const LABELS   = ["15-16→16-17","16-17→17-18","17-18→18-19","18-19→19-20","19-20→21-22*","21-22→22-23","22-23→23-24","23-24→24-25","24-25→25-26"];
+const GRIT_ALL = [0.887,0.863,0.882,0.872,0.803,0.883,0.861,0.878,0.879];
+const GRIT_FWD = [0.888,0.862,0.892,0.890,0.815,0.885,0.866,0.894,0.887];
+const PTS_FWD  = [0.794,0.751,0.840,0.828,0.744,0.813,0.832,0.836,0.840];
+const GAP_IDX  = 4;
+
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+const tip    = document.getElementById('tip');
+const PAD    = {l:44, r:16, t:16, b:52};
+
+let hotspots = [];
+
+function draw() {
+  const W = canvas.offsetWidth, H = 360;
+  canvas.width = W; canvas.height = H;
+  const pw = W - PAD.l - PAD.r, ph = H - PAD.t - PAD.b;
+  const n  = LABELS.length;
+
+  const yMin = 0.70, yMax = 0.93;
+  const cx = i => PAD.l + (i / (n-1)) * pw;
+  const cy = v => PAD.t + ph - (v - yMin) / (yMax - yMin) * ph;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Grid lines
+  const gridVals = [0.70, 0.72, 0.74, 0.76, 0.78, 0.80, 0.82, 0.84, 0.86, 0.88, 0.90, 0.92];
+  gridVals.forEach(v => {
+    ctx.strokeStyle = v % 0.1 < 0.005 ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.04)';
+    ctx.lineWidth = 0.5;
+    ctx.beginPath(); ctx.moveTo(PAD.l, cy(v)); ctx.lineTo(W-PAD.r, cy(v)); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.font = '10px Barlow,sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText(v.toFixed(2), PAD.l - 6, cy(v) + 4);
+  });
+
+  // Vertical gap marker
+  const gx = cx(GAP_IDX);
+  ctx.fillStyle = 'rgba(245,158,11,0.06)';
+  ctx.fillRect(gx - pw/(n-1)/2, PAD.t, pw/(n-1), ph);
+  ctx.fillStyle = 'rgba(245,158,11,0.5)';
+  ctx.font = '9px Barlow Condensed,sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('bubble gap', gx, PAD.t + 10);
+
+  // Draw series
+  const series = [
+    { data: GRIT_ALL, color: '#1D9E75', label: 'GRIT z all' },
+    { data: GRIT_FWD, color: '#378ADD', label: 'GRIT z fwd' },
+    { data: PTS_FWD,  color: '#8B949E', label: 'Pts fwd',    dash: true },
+  ];
+
+  hotspots = [];
+
+  series.forEach(s => {
+    ctx.strokeStyle = s.color;
+    ctx.lineWidth = s.dash ? 1.5 : 2;
+    if (s.dash) ctx.setLineDash([5,4]); else ctx.setLineDash([]);
+    ctx.beginPath();
+    s.data.forEach((v, i) => {
+      const x = cx(i), y = cy(v);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Dots
+    s.data.forEach((v, i) => {
+      const x = cx(i), y = cy(v);
+      const isGap = i === GAP_IDX;
+      ctx.beginPath(); ctx.arc(x, y, isGap ? 5 : 4, 0, Math.PI*2);
+      ctx.fillStyle   = isGap ? '#F59E0B' : s.color;
+      ctx.strokeStyle = 'var(--bg)'; ctx.lineWidth = 1.5;
+      ctx.fill(); ctx.stroke();
+      hotspots.push({x, y, label: LABELS[i], val: v, series: s.label, color: isGap ? '#F59E0B' : s.color});
+    });
+  });
+
+  // X axis labels
+  ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.font = '10px Barlow Condensed,sans-serif';
+  LABELS.forEach((l, i) => {
+    ctx.save();
+    ctx.translate(cx(i), H - PAD.b + 8);
+    ctx.rotate(-Math.PI/4);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = i === GAP_IDX ? '#F59E0B' : 'rgba(255,255,255,0.5)';
+    ctx.fillText(l, 0, 0);
+    ctx.restore();
+  });
+
+  // Y axis label
+  ctx.save(); ctx.translate(12, PAD.t + ph/2); ctx.rotate(-Math.PI/2);
+  ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.font = '11px Barlow,sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('Pearson r', 0, 0); ctx.restore();
+}
+
+canvas.addEventListener('mousemove', e => {
+  const rect = canvas.getBoundingClientRect();
+  const scale = canvas.width / rect.width;
+  const mx = (e.clientX - rect.left) * scale, my = (e.clientY - rect.top) * scale;
+  let best = null, bd = 9999;
+  hotspots.forEach(h => {
+    const d = Math.hypot(h.x - mx, h.y - my);
+    if (d < bd) { bd = d; best = h; }
+  });
+  if (best && bd < 16 * scale) {
+    tip.style.display = 'block';
+    tip.style.left = (e.clientX + 14) + 'px';
+    tip.style.top  = (e.clientY - 10) + 'px';
+    tip.innerHTML = `<strong style="color:${best.color}">${best.series}</strong><br>${best.label}<br>r = <strong>${best.val.toFixed(3)}</strong>`;
+  } else {
+    tip.style.display = 'none';
+  }
+});
+canvas.addEventListener('mouseleave', () => tip.style.display = 'none');
+window.addEventListener('resize', draw);
+draw();
+</script>
+</body>
+</html>

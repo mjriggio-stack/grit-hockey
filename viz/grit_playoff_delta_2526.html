@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Playoff GRIT Elevation — 2025-26</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:      #0D1117;
+    --surface: #161B22;
+    --border:  #30363D;
+    --text:    #E6EDF3;
+    --muted:   #8B949E;
+    --green:   #1D9E75;
+    --blue:    #378ADD;
+    --red:     #E24B4A;
+    --amber:   #F59E0B;
+    --ice:     #1C2733;
+    --up:      #1D9E75;
+    --down:    #E24B4A;
+    --flat:    #8B949E;
+  }
+
+  body {
+    font-family: 'Barlow', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  header {
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 16px;
+  }
+
+  .title-row {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  h1 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: clamp(22px, 4vw, 36px);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--amber);
+  }
+
+  .season-tag {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+    max-width: 640px;
+    line-height: 1.5;
+  }
+
+  .controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+
+  .ctrl-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+
+  select, input[type=text] {
+    font-family: 'Barlow', sans-serif;
+    font-size: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 5px 9px;
+    border-radius: 4px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  select:focus, input[type=text]:focus { border-color: var(--amber); }
+  input[type=text] { width: 160px; }
+
+  .stats-bar {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    padding: 10px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .stats-bar strong { font-weight: 600; }
+  .stat-up   strong { color: var(--up); }
+  .stat-down strong { color: var(--down); }
+
+  .chart-wrap {
+    position: relative;
+    width: 100%;
+    background: var(--ice);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+
+  canvas {
+    display: block;
+    width: 100%;
+    cursor: crosshair;
+  }
+
+  #tip {
+    position: fixed;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 9px 12px;
+    font-size: 12px;
+    pointer-events: none;
+    display: none;
+    z-index: 100;
+    max-width: 220px;
+    line-height: 1.7;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  }
+
+  #tip .tip-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 3px;
+  }
+
+  #tip .tip-meta { color: var(--muted); font-size: 11px; }
+  #tip .tip-stats { font-size: 12px; margin-top: 4px; }
+
+  .legend {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    font-size: 11px;
+    color: var(--muted);
+    align-items: center;
+  }
+
+  .leg-item { display: flex; align-items: center; gap: 6px; }
+
+  .leg-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* Cards section */
+  .cards-section { margin-top: 24px; }
+
+  .section-head {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 8px;
+  }
+
+  .player-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    transition: border-color 0.15s;
+  }
+
+  .player-card:hover { border-color: var(--amber); }
+
+  .pc-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+
+  .pc-meta {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .pc-stats {
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .pc-stats strong { color: var(--text); }
+
+  .delta-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 3px;
+    letter-spacing: 0.03em;
+  }
+
+  .delta-up   { background: rgba(29,158,117,0.18); color: var(--up); }
+  .delta-down { background: rgba(226,75,74,0.15);  color: var(--down); }
+  .delta-flat { background: rgba(139,148,158,0.15); color: var(--flat); }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 24px;
+  }
+
+  @media (max-width: 800px) { .two-col { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title-row">
+    <h1>Playoff GRIT Elevation</h1>
+    <span class="season-tag">GRIT v3 · 2025–26 · Forwards</span>
+  </div>
+  <p class="subtitle">Who raised their physical game in the playoffs — normalized against the playoff pool to remove league-wide intensity inflation. X axis = regular season GRIT z (normalized). Y axis = playoff GRIT delta (playoff z − regular season z). Top right = consistently high and elevates further. Top left = steps up from a low regular season baseline.</p>
+</header>
+
+<div class="controls">
+  <div class="ctrl-group">
+    <label>Search</label>
+    <input type="text" id="search" placeholder="Name or team…" oninput="draw()">
+  </div>
+  <div class="ctrl-group">
+    <label>Position</label>
+    <select id="posf" onchange="draw()">
+      <option value="">All</option>
+      <option value="C">Centers</option>
+      <option value="W">Wings</option>
+    </select>
+  </div>
+  <div class="ctrl-group">
+    <label>Team</label>
+    <select id="teamf" onchange="draw()">
+      <option value="">All Teams</option>
+    </select>
+  </div>
+</div>
+
+<div class="stats-bar" id="stats"></div>
+
+<div class="chart-wrap">
+  <canvas id="c" height="480"></canvas>
+</div>
+
+<div class="legend">
+  <span class="leg-item"><span class="leg-dot" style="background:var(--up)"></span>Elevated in playoffs (raw +10 per 60)</span>
+  <span class="leg-item"><span class="leg-dot" style="background:var(--flat)"></span>Held steady (±0.3)</span>
+  <span class="leg-item"><span class="leg-dot" style="background:var(--down)"></span>Declined in playoffs (raw −3 per 60)</span>
+  <span class="leg-item" style="margin-left:auto;font-size:11px;color:var(--muted);">Min 3 playoff GP · 2026 regular season vs playoffs · pool-normalized</span>
+</div>
+
+<div>
+  <div class="cards-section" id="elevators-section"></div>
+  <div class="cards-section" id="decliners-section"></div>
+</div>
+
+<div id="tip"></div>
+
+<script>
+// [name, team, pos, rs_z_norm, rs_raw_per60, po_raw_per60, delta_raw, delta_pct, rs_gp, po_gp]
+const RAW = [["Juraj Slafkovsk\u00fd","MTL","L",0.314,39.2,48.2,9.03,23.0,82,6],["Zachary Bolduc","MTL","R",1.253,59.1,67.2,8.19,13.9,78,6],["Nicolas Roy","COL","C",0.061,48.4,85.6,37.21,76.8,74,4],["Josh Anderson","MTL","R",0.992,54.3,98.8,44.52,82.0,72,6],["Jake Evans","MTL","C",1.352,68.7,129.2,60.55,88.1,68,6],["Alex Newhook","MTL","C",-0.441,40.0,46.2,6.19,15.5,42,6],["Nick Suzuki","MTL","C",-0.253,37.9,49.2,11.26,29.7,82,6],["Ivan Demidov","MTL","R",-0.977,21.9,30.3,8.4,38.3,82,6],["Cole Caufield","MTL","R",-0.71,24.5,38.7,14.12,57.5,81,6],["Oliver Kapanen","MTL","C",-0.705,35.6,36.4,0.83,2.3,82,4],["Sean Kuraly","BOS","C",-0.011,48.4,73.5,25.1,51.8,82,6],["Elias Lindholm","BOS","C",0.064,45.1,71.4,26.29,58.3,69,6],["Pavel Zacha","BOS","C",-0.299,40.3,43.9,3.59,8.9,78,6],["Viktor Arvidsson","BOS","L",-0.344,32.4,54.8,22.44,69.3,69,4],["Nic Dowd","VGK","C",1.965,80.2,104.3,24.15,30.1,75,6],["Marat Khusnutdinov","BOS","C",-1.09,29.1,69.8,40.7,139.7,77,6],["Mark Kastelic","BOS","C",2.674,96.0,158.5,62.52,65.1,82,6],["Tanner Jeannot","BOS","L",1.914,71.5,85.4,13.94,19.5,77,6],["Fraser Minten","BOS","C",0.461,53.8,68.3,14.48,26.9,82,6],["Morgan Geekie","BOS","C",-0.464,37.2,49.5,12.3,33.0,81,6],["David Pastrnak","BOS","R",-0.417,27.4,49.4,22.0,80.4,77,6],["Casey Mittelstadt","BOS","C",-1.544,21.2,26.4,5.13,24.2,71,6],["Leon Draisaitl","EDM","C",-0.909,27.9,44.5,16.6,59.6,65,6],["Nazem Kadri","COL","C",-0.533,35.0,20.7,-14.31,-40.9,77,4],["Vasily Podkolzin","EDM","R",1.18,55.6,75.8,20.29,36.5,82,6],["Connor McDavid","EDM","C",-0.304,35.7,25.9,-9.77,-27.4,82,6],["Trent Frederic","EDM","C",0.9,67.5,102.7,35.22,52.2,74,4],["Ryan Nugent-Hopkins","EDM","C",-1.465,20.8,32.7,11.88,57.1,72,6],["Matt Savoie","EDM","C",-1.459,22.8,28.7,5.88,25.8,82,6],["Mitch Marner","VGK","R",-0.769,22.8,33.6,10.83,47.5,81,6],["Alex Laferriere","LAK","R",1.433,55.7,55.5,-0.27,-0.5,82,4],["Anze Kopitar","LAK","C",0.243,46.7,53.9,7.22,15.5,67,4],["Warren Foegele","OTT","L",-0.754,26.4,35.7,9.28,35.1,68,4],["Tomas Hertl","VGK","C",0.4,51.2,82.7,31.47,61.4,82,6],["Colton Sissons","VGK","C",1.386,73.8,73.6,-0.15,-0.2,66,6],["Jack Eichel","VGK","C",-0.555,33.2,36.3,3.11,9.4,74,6],["Phillip Danault","MTL","C",0.187,49.3,65.0,15.69,31.8,75,6],["Ivan Barbashev","VGK","L",0.048,37.2,98.2,61.04,164.1,82,6],["Trevor Moore","LAK","L",-0.682,25.8,36.0,10.27,39.9,69,4],["Mark Stone","VGK","R",-0.236,30.8,27.2,-3.61,-11.7,60,6],["Brett Howden","VGK","C",0.746,59.3,73.1,13.78,23.2,58,6],["Quinton Byfield","LAK","R",0.867,45.8,77.2,31.38,68.5,79,4],["Keegan Kolesar","VGK","R",2.281,79.7,133.2,53.52,67.1,82,6],["Adrian Kempe","LAK","R",-0.157,31.9,45.9,13.99,43.9,81,4],["Pavel Dorofeyev","VGK","R",-1.083,19.3,34.2,14.86,76.9,82,6],["Reilly Smith","VGK","R",-1.327,17.2,21.9,4.73,27.5,69,6],["Joel Armia","LAK","R",-0.357,32.6,85.0,52.43,160.8,67,3],["Colton Dach","EDM","C",1.773,82.4,135.8,53.34,64.7,61,5],["Jason Dickinson","EDM","C",1.048,63.5,79.0,15.52,24.5,64,4],["Nick Foligno","MIN","L",1.888,71.0,75.9,4.86,6.8,54,6],["Josh Doan","BUF","R",0.181,39.5,60.0,20.45,51.7,82,6],["Artemi Panarin","LAK","L",-1.745,8.9,3.8,-5.1,-57.3,78,4],["Beck Malenstyn","BUF","L",3.119,94.7,114.3,19.55,20.6,81,6],["Tage Thompson","BUF","C",-0.141,40.8,53.2,12.37,30.3,81,6],["Peyton Krebs","BUF","C",1.151,67.7,81.3,13.64,20.1,82,6],["Jack Quinn","BUF","R",-1.042,20.8,29.2,8.4,40.3,82,6],["Josh Norris","BUF","C",0.118,47.9,67.9,20.0,41.7,44,3],["Jason Zucker","BUF","L",-0.299,32.3,29.7,-2.63,-8.1,62,6],["Ryan McLeod","BUF","C",-0.525,36.1,28.1,-7.99,-22.1,81,6],["Alex Tuch","BUF","R",0.245,37.8,64.5,26.66,70.4,79,6],["Elmer Soderblom","PIT","L",0.687,53.1,76.5,23.45,44.2,59,5],["Fabian Zetterlund","OTT","L",0.914,54.5,64.0,9.5,17.4,82,4],["Brandon Hagel","TBL","L",-0.058,33.0,51.9,18.92,57.4,71,6],["Yanni Gourde","TBL","C",0.099,47.1,74.5,27.42,58.2,82,6],["Oliver Bjorkstrand","TBL","R",0.013,38.9,79.4,40.5,104.0,80,3],["Anthony Cirelli","TBL","C",0.458,51.8,84.2,32.4,62.5,71,6],["Gage Goncalves","TBL","C",-0.547,39.4,42.5,3.08,7.8,74,6],["Tim St\u00fctzle","OTT","C",0.118,43.8,30.6,-13.26,-30.3,80,4],["Lars Eller","OTT","C",0.225,54.8,109.6,54.78,100.0,68,4],["Michael Amadio","OTT","R",0.18,39.3,50.6,11.28,28.7,81,4],["Brady Tkachuk","OTT","L",1.2,53.9,74.3,20.41,37.9,60,4],["Nick Cousins","OTT","C",1.046,69.5,82.0,12.5,18.0,81,4],["Brayden Point","TBL","C",-1.381,22.4,22.6,0.13,0.6,63,6],["Ridly Greig","OTT","C",0.967,60.6,75.4,14.77,24.4,77,4],["Claude Giroux","OTT","R",0.502,44.1,61.1,17.05,38.7,82,4],["Dylan Cozens","OTT","C",0.679,55.6,65.6,9.99,18.0,82,4],["Jake Guentzel","TBL","C",-0.865,29.2,25.4,-3.84,-13.1,81,6],["Nikita Kucherov","TBL","R",-0.973,19.8,29.3,9.5,48.0,76,6],["Shane Pinto","OTT","C",0.509,51.2,57.2,6.05,11.8,72,4],["Sean Couturier","PHI","C",0.806,58.1,83.5,25.34,43.6,78,6],["Noah Cates","PHI","L",0.799,48.6,69.6,20.93,43.0,82,6],["Garnet Hathaway","PHI","R",3.702,107.0,115.3,8.21,7.7,66,5],["Owen Tippett","PHI","R",0.422,42.3,76.3,33.98,80.3,81,6],["Trevor Zegras","PHI","C",-1.261,24.1,50.5,26.46,110.0,81,6],["Christian Dvorak","PHI","C",-0.045,42.9,68.5,25.63,59.7,80,6],["Travis Konecny","PHI","R",-0.217,31.1,84.0,52.88,169.8,77,6],["Matvei Michkov","PHI","R",-0.784,25.3,40.0,14.68,58.1,81,5],["Bobby Brink","MIN","R",0.192,40.4,40.4,0.04,0.1,68,4],["Sidney Crosby","PIT","C",-0.053,42.1,66.8,24.71,58.7,68,6],["Noel Acciari","PIT","C",1.326,70.8,106.1,35.32,49.9,67,6],["Blake Lizotte","PIT","C",0.604,58.3,63.0,4.77,8.2,55,6],["Ben Kindel","PIT","C",-0.711,35.0,70.5,35.47,101.2,77,6],["Rickard Rakell","PIT","R",0.176,36.9,40.4,3.52,9.5,60,6],["Evgeni Malkin","PIT","C",-1.051,27.9,39.3,11.42,40.9,56,6],["Connor Dewar","PIT","C",0.066,49.1,81.4,32.34,65.9,78,6],["Anthony Mantha","PIT","R",-0.422,30.8,62.3,31.6,102.8,81,6],["Tommy Novak","PIT","C",-1.077,29.5,46.9,17.41,59.0,82,6],["Seth Jarvis","CAR","C",-0.52,35.3,50.2,14.94,42.3,71,4],["Eric Robinson","CAR","L",-0.164,38.1,79.8,41.7,109.5,67,4],["Luke Glendening","PHI","C",1.356,76.7,78.6,1.96,2.6,70,6],["Nikolaj Ehlers","CAR","L",-1.33,16.0,36.4,20.41,127.3,82,3],["Taylor Hall","CAR","L",0.226,41.5,41.9,0.44,1.1,80,4],["Logan Stankoven","CAR","C",-0.542,37.5,51.1,13.56,36.1,81,4],["Andrei Svechnikov","CAR","R",0.318,40.6,82.5,41.85,103.0,79,4],["Sebastian Aho","CAR","C",-0.715,31.9,38.0,6.2,19.5,79,4],["Jordan Staal","CAR","C",2.021,78.3,95.9,17.62,22.5,75,4],["Jordan Martinook","CAR","L",0.537,46.1,71.3,25.19,54.6,77,4],["Jackson Blake","CAR","R",-0.618,26.9,34.1,7.22,26.9,81,4],["William Carrier","CAR","L",1.682,70.9,135.5,64.59,91.1,70,4],["Joel Eriksson Ek","MIN","C",1.092,59.7,60.7,1.01,1.7,70,6],["Matt Boldy","MIN","L",-0.066,32.3,44.8,12.48,38.6,76,6],["Yakov Trenin","MIN","C",2.364,89.3,152.3,63.03,70.6,82,4],["Ryan Hartman","MIN","R",1.915,64.9,65.5,0.57,0.9,76,6],["Marcus Johansson","MIN","L",-0.946,22.4,40.7,18.24,81.3,75,6],["Kirill Kaprizov","MIN","L",-0.861,20.6,34.3,13.68,66.5,78,6],["Marcus Foligno","MIN","L",2.358,78.5,116.8,38.37,48.9,56,6],["Vladimir Tarasenko","MIN","R",-0.606,28.0,22.7,-5.33,-19.0,75,6],["Michael McCarron","MIN","C",3.349,104.4,105.0,0.6,0.6,79,6],["Cole Smith","VGK","R",1.314,60.6,90.9,30.38,50.2,63,6],["Colin Blackwell","DAL","C",0.414,57.5,64.6,7.07,12.3,70,6],["Mavrik Bourque","DAL","C",-0.4,39.8,70.8,31.03,78.0,82,6],["Wyatt Johnston","DAL","C",-0.107,40.6,25.2,-15.42,-38.0,82,6],["Mikko Rantanen","DAL","R",0.147,35.5,41.9,6.33,17.8,64,6],["Justin Hryckowian","DAL","C",0.554,58.1,81.2,23.05,39.6,81,6],["Sam Steel","DAL","C",-0.589,36.3,38.4,2.12,5.8,73,6],["Radek Faksa","DAL","C",1.178,71.4,79.9,8.59,12.0,58,6],["Matt Duchene","DAL","C",-1.115,27.5,32.7,5.24,19.0,57,6],["Jason Robertson","DAL","L",-0.648,24.4,27.9,3.55,14.6,82,6],["Gabriel Landeskog","COL","L",0.547,44.6,89.2,44.62,100.0,60,4],["Nick Schmaltz","UTA","C",-0.901,29.0,43.7,14.67,50.6,82,6],["Jack Drury","COL","C",0.764,60.2,113.1,52.93,88.0,82,4],["Parker Kelly","COL","C",1.038,67.4,76.5,9.11,13.5,82,4],["Lawson Crouse","UTA","L",0.701,46.8,66.6,19.81,42.4,81,6],["Nathan MacKinnon","COL","C",-0.632,31.5,56.7,25.19,80.1,80,4],["Brock Nelson","COL","C",0.253,46.4,73.0,26.64,57.4,81,4],["Dylan Guenther","UTA","R",-0.641,26.0,34.9,8.89,34.2,79,6],["Clayton Keller","UTA","R",-1.155,17.7,29.8,12.1,68.4,82,6],["Kevin Stenlund","UTA","C",1.137,66.4,88.9,22.44,33.8,80,6],["Logan Cooley","UTA","C",0.091,46.0,59.3,13.24,28.8,54,6],["Martin Necas","COL","C",-1.006,26.5,27.2,0.7,2.6,78,4],["Kailer Yamamoto","UTA","R",-0.16,37.8,61.3,23.46,62.1,59,6],["Artturi Lehkonen","COL","L",-0.666,25.0,67.4,42.42,169.5,70,4],["JJ Peterka","UTA","R",-1.315,16.5,31.2,14.69,89.1,82,6],["Beckett Sennecke","ANA","R",0.294,39.9,40.8,0.93,2.3,82,6],["Cutter Gauthier","ANA","L",-0.791,23.8,52.6,28.76,120.6,76,6],["Leo Carlsson","ANA","C",-0.729,31.9,35.4,3.43,10.7,70,6],["Chris Kreider","ANA","L",-0.815,23.6,36.3,12.67,53.7,75,6],["Mason McTavish","ANA","C",0.068,47.7,69.9,22.27,46.7,75,6],["Alex Killorn","ANA","L",-0.679,25.8,36.0,10.13,39.2,82,6],["Mikael Granlund","ANA","C",-0.439,36.3,52.6,16.31,44.9,58,6],["Ryan Poehling","ANA","C",0.715,58.6,52.9,-5.69,-9.7,75,6],["Troy Terry","ANA","R",-1.165,17.8,15.8,-2.02,-11.3,61,6],["Alexandre Texier","MTL","L",-0.283,34.1,31.1,-3.06,-9.0,51,6],["Bryan Rust","PIT","R",-0.557,25.8,31.1,5.33,20.7,72,6],["Valeri Nichushkin","COL","R",-0.353,30.1,27.9,-2.12,-7.1,72,4],["Danila Yurov","MIN","R",0.477,46.9,54.7,7.81,16.7,73,4],["Michael Carcone","UTA","L",0.558,48.9,74.7,25.88,53.0,79,6],["Mark Jankowski","CAR","L",0.698,53.2,45.2,-8.02,-15.1,68,4],["Drake Batherson","OTT","R",0.272,39.6,72.0,32.39,81.8,79,4],["Zach Benson","BUF","L",-0.13,34.7,67.6,32.87,94.6,65,6],["Jack Roslovic","EDM","C",-0.997,29.9,50.3,20.39,68.3,69,6],["Egor Chinakhov","PIT","R",-0.915,24.0,41.3,17.28,72.0,72,6],["Corey Perry","TBL","R",-0.394,32.3,57.2,24.94,77.2,72,6],["Noah Ostlund","BUF","C",-1.461,23.2,14.8,-8.41,-36.3,60,3],["Zemgus Girgensons","TBL","C",0.802,60.4,102.7,42.23,69.9,74,6],["Oskar B\u00e4ck","DAL","C",-1.096,30.4,47.7,17.27,56.7,72,6],["Scott Laughton","LAK","C",1.682,75.7,80.7,4.97,6.6,64,4],["Mats Zuccarello","MIN","R",-1.138,18.1,26.1,7.95,43.9,59,3],["Zach Hyman","EDM","L",-0.097,32.2,57.1,24.88,77.1,58,6],["Jamie Benn","DAL","L",0.069,40.2,54.3,14.1,35.1,60,6],["Nick Paul","TBL","L",1.219,58.4,144.6,86.13,147.4,51,5]];
+
+const TEAMS = [...new Set(RAW.map(d => d[1]))].sort();
+const teamSel = document.getElementById('teamf');
+TEAMS.forEach(t => { const o = document.createElement('option'); o.value = t; o.textContent = t; teamSel.appendChild(o); });
+
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+const tip    = document.getElementById('tip');
+const PAD    = { l:60, r:24, t:24, b:50 };
+let _pts = [], _ys = [], _data = [];
+
+function isW(p) { return p === 'L' || p === 'R'; }
+
+function dotColor(delta) {
+  if (delta > 10)  return { fill: 'rgba(29,158,117,', stroke: 'rgba(29,158,117,' };
+  if (delta < -3)  return { fill: 'rgba(226,75,74,',  stroke: 'rgba(226,75,74,' };
+  return { fill: 'rgba(139,148,158,', stroke: 'rgba(139,148,158,' };
+}
+
+function draw() {
+  const pf = document.getElementById('posf').value;
+  const tf = document.getElementById('teamf').value;
+  const q  = document.getElementById('search').value.toLowerCase();
+
+  _data = RAW.filter(d => {
+    const pm = pf === '' || (pf === 'C' && d[2] === 'C') || (pf === 'W' && isW(d[2]));
+    const tm = tf === '' || d[1] === tf;
+    const qm = q === '' || d[0].toLowerCase().includes(q) || d[1].toLowerCase().includes(q);
+    return pm && tm && qm;
+  });
+
+  const up   = _data.filter(d => d[6] >  10).length;
+  const down = _data.filter(d => d[6] < -3).length;
+  const flat = _data.length - up - down;
+  const avgDelta = (_data.reduce((s,d) => s+d[6], 0) / (_data.length||1)).toFixed(1);
+
+  document.getElementById('stats').innerHTML =
+    `<span class="stat">${_data.length} players</span>` +
+    `<span class="stat stat-up"><strong>${up}</strong> elevated (raw +10)</span>` +
+    `<span class="stat"><strong>${flat}</strong> flat</span>` +
+    `<span class="stat stat-down"><strong>${down}</strong> declined (raw −3)</span>` +
+    `<span class="stat">avg delta: <strong style="color:${avgDelta>=0?'var(--up)':'var(--down)'}">${avgDelta>=0?'+':''}${avgDelta}</strong></span>`;
+
+  const W = canvas.offsetWidth, H = 480;
+  canvas.width = W; canvas.height = H;
+  const pw = W - PAD.l - PAD.r, ph = H - PAD.t - PAD.b;
+
+  const xVals = _data.map(d => d[3]);
+  const yVals = _data.map(d => d[6]);
+  if (!xVals.length) return;
+
+  const xPad = 0.3, yPad = 0.2;
+  const xMin = Math.min(...xVals) - xPad, xMax = Math.max(...xVals) + xPad;
+  const yMin = Math.min(...yVals) - yPad, yMax = Math.max(...yVals) + yPad;
+
+  const cx = v => PAD.l + (v - xMin) / (xMax - xMin) * pw;
+  const cy = v => PAD.t + ph - (v - yMin) / (yMax - yMin) * ph;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // grid
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)'; ctx.lineWidth = 0.5;
+  for (let i = 0; i <= 5; i++) { const y = PAD.t + i*ph/5; ctx.beginPath(); ctx.moveTo(PAD.l,y); ctx.lineTo(W-PAD.r,y); ctx.stroke(); }
+  for (let i = 0; i <= 6; i++) { const x = PAD.l + i*pw/6; ctx.beginPath(); ctx.moveTo(x,PAD.t); ctx.lineTo(x,H-PAD.b); ctx.stroke(); }
+
+  // zero lines
+  ctx.setLineDash([5,5]); ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 1;
+  const x0 = cx(0), y0 = cy(0);
+  ctx.beginPath(); ctx.moveTo(x0, PAD.t); ctx.lineTo(x0, H-PAD.b); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(PAD.l, y0); ctx.lineTo(W-PAD.r, y0); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // quadrant labels
+  ctx.font = 'bold 10px Barlow Condensed, sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.18)';
+  ctx.textAlign = 'left';
+  ctx.fillText('HIGH RS · ELEVATES', x0+8, PAD.t+14);
+  ctx.textAlign = 'right';
+  ctx.fillText('LOW RS · STEPS UP', x0-8, PAD.t+14);
+  ctx.textAlign = 'right';
+  ctx.fillText('LOW RS · FADES', x0-8, H-PAD.b-8);
+  ctx.textAlign = 'left';
+  ctx.fillText('HIGH RS · DECLINES', x0+8, H-PAD.b-8);
+
+  // axis labels
+  ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.font = '11px Barlow, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('← lower RS GRIT   ·   Regular Season GRIT z (normalized)   ·   higher RS GRIT →', PAD.l+pw/2, H-PAD.b+28);
+  ctx.save(); ctx.translate(18, PAD.t+ph/2); ctx.rotate(-Math.PI/2);
+  ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.font = '11px Barlow, sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('← declined   ·   Raw GRIT/60 delta (PO minus RS)   ·   elevated →', 0, 0);
+  ctx.restore();
+
+  // tick labels
+  ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.font = '11px Barlow, sans-serif';
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= 5; i++) { const v = yMin + i*(yMax-yMin)/5; ctx.fillText(v.toFixed(1), PAD.l-6, cy(v)+4); }
+  ctx.textAlign = 'center';
+  for (let i = 0; i <= 6; i++) { const v = xMin + i*(xMax-xMin)/6; ctx.fillText(v.toFixed(1), cx(v), H-PAD.b+14); }
+
+  // dots
+  _pts = []; _ys = [];
+  _data.forEach(d => {
+    const px = cx(d[3]), py = cy(d[6]);
+    const { fill, stroke } = dotColor(d[6]);
+    const highlighted = q && (d[0].toLowerCase().includes(q) || d[1].toLowerCase().includes(q));
+    const r = highlighted ? 7 : 4;
+    ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI*2);
+    ctx.fillStyle   = fill   + (highlighted ? 'ff' : 'cc') + ')';
+    ctx.strokeStyle = stroke + (highlighted ? 'ff' : '99') + ')';
+    ctx.lineWidth = highlighted ? 2 : 1;
+    ctx.fill(); ctx.stroke();
+    _pts.push(px); _ys.push(py);
+  });
+
+  buildCards();
+}
+
+canvas.addEventListener('mousemove', e => {
+  const rect = canvas.getBoundingClientRect();
+  const scale = canvas.width / rect.width;
+  const mx = (e.clientX - rect.left) * scale, my = (e.clientY - rect.top) * scale;
+  let best = -1, bd = 9999;
+  _pts.forEach((px, i) => { const dist = Math.hypot(px-mx, _ys[i]-my); if(dist < bd){ bd=dist; best=i; }});
+  if (best >= 0 && bd < 20*scale) {
+    const d = _data[best];
+    const deltaStr = (d[6] >= 0 ? '+' : '') + d[6].toFixed(1);
+    const col = d[6] > 10 ? 'var(--up)' : d[6] < -3 ? 'var(--down)' : 'var(--muted)';
+    tip.style.display = 'block';
+    tip.style.left = (e.clientX + 16) + 'px';
+    tip.style.top  = (e.clientY - 10) + 'px';
+    tip.innerHTML =
+      `<div class="tip-name" style="color:${col}">${d[0]}</div>` +
+      `<div class="tip-meta">${d[2]} · ${d[1]} · RS: ${d[8]} GP · PO: ${d[9]} GP</div>` +
+      `<div class="tip-stats">RS GRIT/60: <strong>${d[4].toFixed(1)}</strong></div>` +
+      `<div class="tip-stats">PO GRIT/60: <strong>${d[5].toFixed(1)}</strong></div>` +
+      `<div class="tip-stats">Delta: <strong style="color:${col}">${deltaStr}</strong> (${d[7]>=0?'+':''}${d[7].toFixed(1)}%)</div>`;
+  } else {
+    tip.style.display = 'none';
+  }
+});
+canvas.addEventListener('mouseleave', () => tip.style.display = 'none');
+
+function deltaBadge(delta) {
+  const str = (delta >= 0 ? '+' : '') + delta.toFixed(1);
+  const cls = delta > 10 ? 'delta-up' : delta < -3 ? 'delta-down' : 'delta-flat';
+  return `<span class="delta-badge ${cls}">${str}</span>`;
+}
+
+function buildCards() {
+  const sorted = [..._data].sort((a,b) => b[6]-a[6]);
+
+  const makeCard = d => `
+    <div class="player-card">
+      <div class="pc-name">${d[0]}</div>
+      <div class="pc-meta">${d[2]} · ${d[1]} · ${d[9]} PO GP</div>
+      <div class="pc-stats">
+        <div>RS: <strong>${d[4].toFixed(1)}</strong> → PO: <strong>${d[5].toFixed(1)}</strong> per 60</div>
+        <div>Delta: ${deltaBadge(d[6])} <span style="color:var(--muted);font-size:10px">${d[7]>=0?'+':''}${d[7].toFixed(1)}%</span></div>
+      </div>
+    </div>`;
+
+  document.getElementById('elevators-section').innerHTML =
+    `<div class="section-head" style="color:var(--amber)">All Players — Raw GRIT/60 Delta Ranked (${sorted.length})</div>` +
+    `<div class="cards-grid">${sorted.map(makeCard).join('')}</div>`;
+
+  document.getElementById('decliners-section').innerHTML = '';
+}
+
+window.addEventListener('resize', draw);
+draw();
+</script>
+</body>
+</html>
