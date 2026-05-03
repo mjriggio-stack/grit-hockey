@@ -1,0 +1,554 @@
+{
+  "yoy_repeatability": {
+    "v3": {
+      "2016_2017": {
+        "n_overall": 431,
+        "r_overall": 0.8868,
+        "gap_year": false,
+        "by_position": {
+          "C": {
+            "n": 150,
+            "r": 0.895
+          },
+          "D": {
+            "n": 156,
+            "r": 0.8855
+          },
+          "L": {
+            "n": 69,
+            "r": 0.8956
+          },
+          "R": {
+            "n": 56,
+            "r": 0.8579
+          }
+        }
+      },
+      "2017_2018": {
+        "n_overall": 444,
+        "r_overall": 0.8627,
+        "gap_year": false,
+        "by_position": {
+          "C": {
+            "n": 154,
+            "r": 0.8437
+          },
+          "D": {
+            "n": 161,
+            "r": 0.8644
+          },
+          "L": {
+            "n": 73,
+            "r": 0.8801
+          },
+          "R": {
+            "n": 56,
+            "r": 0.9042
+          }
+        }
+      },
+      "2018_2019": {
+        "n_overall": 466,
+        "r_overall": 0.8816,
+        "gap_year": false,
+        "by_position": {
+          "C": {
+            "n": 163,
+            "r": 0.8907
+          },
+          "D": {
+            "n": 172,
+            "r": 0.8659
+          },
+          "L": {
+            "n": 73,
+            "r": 0.8668
+          },
+          "R": {
+            "n": 58,
+            "r": 0.9329
+          }
+        }
+      },
+      "2019_2020": {
+        "n_overall": 448,
+        "r_overall": 0.8723,
+        "gap_year": false,
+        "by_position": {
+          "C": {
+            "n": 164,
+            "r": 0.9001
+          },
+          "D": {
+            "n": 157,
+            "r": 0.8384
+          },
+          "L": {
+            "n": 73,
+            "r": 0.8671
+          },
+          "R": {
+            "n": 54,
+            "r": 0.9014
+          }
+        }
+      },
+      "2020_2022": {
+        "n_overall": 415,
+        "r_overall": 0.803,
+        "gap_year": true,
+        "by_position": {
+          "C": {
+            "n": 142,
+            "r": 0.7628
+          },
+          "D": {
+            "n": 150,
+            "r": 0.7841
+          },
+          "L": {
+            "n": 73,
+            "r": 0.8709
+          },
+          "R": {
+            "n": 50,
+            "r": 0.8756
+          }
+        }
+      },
+      "2022_2023": {
+        "n_overall": 474,
+        "r_overall": 0.8831,
+        "gap_year": false,
+        "by_position": {
+          "C": {
+            "n": 157,
+            "r": 0.8719
+          },
+          "D": {
+            "n": 167,
+            "r": 0.8812
+          },
+          "L": {
+            "n": 90,
+            "r": 0.896
+          },
+          "R": {
+            "n": 60,
+            "r": 0.897
+          }
+        }
+      },
+      "2023_2024": {
+        "n_overall": 472,
+        "r_overall": 0.8609,
+        "gap_year": false,
+        "by_position": {
+          "C": {
+            "n": 154,
+            "r": 0.8511
+          },
+          "D": {
+            "n": 172,
+            "r": 0.8521
+          },
+          "L": {
+            "n": 79,
+            "r": 0.8694
+          },
+          "R": {
+            "n": 67,
+            "r": 0.9126
+          }
+        }
+      },
+      "2024_2025": {
+        "n_overall": 478,
+        "r_overall": 0.8777,
+        "gap_year": false,
+        "by_position": {
+          "C": {
+            "n": 157,
+            "r": 0.8689
+          },
+          "D": {
+            "n": 169,
+            "r": 0.8519
+          },
+          "L": {
+            "n": 83,
+            "r": 0.8982
+          },
+          "R": {
+            "n": 69,
+            "r": 0.9413
+          }
+        }
+      },
+      "2025_2026": {
+        "n_overall": 485,
+        "r_overall": 0.8795,
+        "gap_year": false,
+        "by_position": {
+          "C": {
+            "n": 164,
+            "r": 0.8658
+          },
+          "D": {
+            "n": 168,
+            "r": 0.8709
+          },
+          "L": {
+            "n": 81,
+            "r": 0.9045
+          },
+          "R": {
+            "n": 72,
+            "r": 0.9171
+          }
+        }
+      }
+    }
+  },
+  "yoy_grit_vs_points": {
+    "2016_2017": {
+      "grit_z_r": 0.888,
+      "grit_z_n": 275,
+      "points_r": 0.794,
+      "points_n": 466,
+      "gap": 0.094,
+      "gap_year": false
+    },
+    "2017_2018": {
+      "grit_z_r": 0.862,
+      "grit_z_n": 283,
+      "points_r": 0.751,
+      "points_n": 486,
+      "gap": 0.11,
+      "gap_year": false
+    },
+    "2018_2019": {
+      "grit_z_r": 0.892,
+      "grit_z_n": 294,
+      "points_r": 0.84,
+      "points_n": 481,
+      "gap": 0.052,
+      "gap_year": false
+    },
+    "2019_2020": {
+      "grit_z_r": 0.89,
+      "grit_z_n": 291,
+      "points_r": 0.828,
+      "points_n": 478,
+      "gap": 0.063,
+      "gap_year": false
+    },
+    "2020_2022": {
+      "grit_z_r": 0.815,
+      "grit_z_n": 265,
+      "points_r": 0.744,
+      "points_n": 458,
+      "gap": 0.07,
+      "gap_year": true
+    },
+    "2022_2023": {
+      "grit_z_r": 0.885,
+      "grit_z_n": 307,
+      "points_r": 0.813,
+      "points_n": 543,
+      "gap": 0.072,
+      "gap_year": false
+    },
+    "2023_2024": {
+      "grit_z_r": 0.866,
+      "grit_z_n": 300,
+      "points_r": 0.832,
+      "points_n": 509,
+      "gap": 0.034,
+      "gap_year": false
+    },
+    "2024_2025": {
+      "grit_z_r": 0.894,
+      "grit_z_n": 309,
+      "points_r": 0.836,
+      "points_n": 506,
+      "gap": 0.058,
+      "gap_year": false
+    },
+    "2025_2026": {
+      "grit_z_r": 0.887,
+      "grit_z_n": 317,
+      "points_r": 0.836,
+      "points_n": 518,
+      "gap": 0.051,
+      "gap_year": false
+    }
+  },
+  "pool_sizes": {
+    "2016": {
+      "C": 184,
+      "W": 158,
+      "D": 196,
+      "total": 538
+    },
+    "2017": {
+      "C": 183,
+      "W": 162,
+      "D": 189,
+      "total": 534
+    },
+    "2018": {
+      "C": 187,
+      "W": 169,
+      "D": 205,
+      "total": 561
+    },
+    "2019": {
+      "C": 196,
+      "W": 158,
+      "D": 200,
+      "total": 554
+    },
+    "2020": {
+      "C": 179,
+      "W": 150,
+      "D": 190,
+      "total": 519
+    },
+    "2022": {
+      "C": 187,
+      "W": 189,
+      "D": 202,
+      "total": 578
+    },
+    "2023": {
+      "C": 193,
+      "W": 183,
+      "D": 204,
+      "total": 580
+    },
+    "2024": {
+      "C": 180,
+      "W": 185,
+      "D": 210,
+      "total": 575
+    },
+    "2025": {
+      "C": 188,
+      "W": 183,
+      "D": 205,
+      "total": 576
+    },
+    "2026": {
+      "C": 187,
+      "W": 187,
+      "D": 204,
+      "total": 578
+    }
+  },
+  "playoff_rate_inflation": {
+    "2016": {
+      "rs_rate": 42.29,
+      "po_rate": 56.57,
+      "ratio": 1.338,
+      "by_event": {
+        "raw_hits_thrown": 1.478,
+        "raw_hits_taken": 1.422,
+        "raw_blocked_shots": 1.156,
+        "raw_blocked_shots_hd": 1.085,
+        "raw_takeaways_high_danger": 1.115,
+        "raw_dz_faceoff_wins": 1.035,
+        "raw_crease_goals": 0.89,
+        "raw_penalties_drawn": 1.103,
+        "raw_physical_minors_taken": 1.461,
+        "raw_fighting_majors": 0.414,
+        "raw_giveaways_dz": 1.112,
+        "raw_giveaways_nz": 1.244,
+        "raw_giveaways_oz": 1.131
+      }
+    },
+    "2017": {
+      "rs_rate": 40.92,
+      "po_rate": 54.35,
+      "ratio": 1.328,
+      "by_event": {
+        "raw_hits_thrown": 1.567,
+        "raw_hits_taken": 1.53,
+        "raw_blocked_shots": 1.13,
+        "raw_blocked_shots_hd": 1.185,
+        "raw_takeaways_high_danger": 1.263,
+        "raw_dz_faceoff_wins": 1.043,
+        "raw_crease_goals": 0.905,
+        "raw_penalties_drawn": 1.081,
+        "raw_physical_minors_taken": 1.458,
+        "raw_fighting_majors": 0.657,
+        "raw_giveaways_dz": 1.34,
+        "raw_giveaways_nz": 1.157,
+        "raw_giveaways_oz": 0.974
+      }
+    },
+    "2018": {
+      "rs_rate": 41.27,
+      "po_rate": 53.89,
+      "ratio": 1.306,
+      "by_event": {
+        "raw_hits_thrown": 1.51,
+        "raw_hits_taken": 1.484,
+        "raw_blocked_shots": 1.086,
+        "raw_blocked_shots_hd": 0.971,
+        "raw_takeaways_high_danger": 1.097,
+        "raw_dz_faceoff_wins": 1.009,
+        "raw_crease_goals": 0.893,
+        "raw_penalties_drawn": 1.203,
+        "raw_physical_minors_taken": 1.723,
+        "raw_fighting_majors": 0.658,
+        "raw_giveaways_dz": 1.056,
+        "raw_giveaways_nz": 0.884,
+        "raw_giveaways_oz": 0.906
+      }
+    },
+    "2019": {
+      "rs_rate": 41.07,
+      "po_rate": 55.2,
+      "ratio": 1.344,
+      "by_event": {
+        "raw_hits_thrown": 1.529,
+        "raw_hits_taken": 1.49,
+        "raw_blocked_shots": 1.091,
+        "raw_blocked_shots_hd": 1.098,
+        "raw_takeaways_high_danger": 0.943,
+        "raw_dz_faceoff_wins": 0.979,
+        "raw_crease_goals": 0.809,
+        "raw_penalties_drawn": 1.06,
+        "raw_physical_minors_taken": 1.391,
+        "raw_fighting_majors": 0.308,
+        "raw_giveaways_dz": 0.878,
+        "raw_giveaways_nz": 1.145,
+        "raw_giveaways_oz": 1.04
+      }
+    },
+    "2022": {
+      "rs_rate": 41.73,
+      "po_rate": 60.01,
+      "ratio": 1.438,
+      "by_event": {
+        "raw_hits_thrown": 1.624,
+        "raw_hits_taken": 1.576,
+        "raw_blocked_shots": 1.185,
+        "raw_blocked_shots_hd": 1.151,
+        "raw_takeaways_high_danger": 1.03,
+        "raw_dz_faceoff_wins": 1.03,
+        "raw_crease_goals": 0.85,
+        "raw_penalties_drawn": 1.279,
+        "raw_physical_minors_taken": 1.812,
+        "raw_fighting_majors": 0.508,
+        "raw_giveaways_dz": 1.061,
+        "raw_giveaways_nz": 1.537,
+        "raw_giveaways_oz": 1.271
+      }
+    },
+    "2023": {
+      "rs_rate": 43.35,
+      "po_rate": 58.74,
+      "ratio": 1.355,
+      "by_event": {
+        "raw_hits_thrown": 1.575,
+        "raw_hits_taken": 1.544,
+        "raw_blocked_shots": 1.145,
+        "raw_blocked_shots_hd": 1.036,
+        "raw_takeaways_high_danger": 1.1,
+        "raw_dz_faceoff_wins": 0.971,
+        "raw_crease_goals": 1.032,
+        "raw_penalties_drawn": 1.123,
+        "raw_physical_minors_taken": 1.582,
+        "raw_fighting_majors": 0.735,
+        "raw_giveaways_dz": 1.202,
+        "raw_giveaways_nz": 1.328,
+        "raw_giveaways_oz": 1.091
+      }
+    },
+    "2024": {
+      "rs_rate": 44.86,
+      "po_rate": 62.61,
+      "ratio": 1.396,
+      "by_event": {
+        "raw_hits_thrown": 1.693,
+        "raw_hits_taken": 1.656,
+        "raw_blocked_shots": 1.13,
+        "raw_blocked_shots_hd": 1.016,
+        "raw_takeaways_high_danger": 0.827,
+        "raw_dz_faceoff_wins": 1.028,
+        "raw_crease_goals": 0.833,
+        "raw_penalties_drawn": 0.979,
+        "raw_physical_minors_taken": 1.386,
+        "raw_fighting_majors": 0.239,
+        "raw_giveaways_dz": 1.078,
+        "raw_giveaways_nz": 1.083,
+        "raw_giveaways_oz": 1.176
+      }
+    },
+    "2025": {
+      "rs_rate": 39.95,
+      "po_rate": 59.56,
+      "ratio": 1.491,
+      "by_event": {
+        "raw_hits_thrown": 1.868,
+        "raw_hits_taken": 1.789,
+        "raw_blocked_shots": 1.076,
+        "raw_blocked_shots_hd": 1.044,
+        "raw_takeaways_high_danger": 0.83,
+        "raw_dz_faceoff_wins": 0.984,
+        "raw_crease_goals": 0.94,
+        "raw_penalties_drawn": 1.224,
+        "raw_physical_minors_taken": 1.922,
+        "raw_fighting_majors": 0.289,
+        "raw_giveaways_dz": 0.903,
+        "raw_giveaways_nz": 1.037,
+        "raw_giveaways_oz": 0.803
+      }
+    },
+    "2026": {
+      "rs_rate": 38.54,
+      "po_rate": 58.52,
+      "ratio": 1.519,
+      "by_event": {
+        "raw_hits_thrown": 1.822,
+        "raw_hits_taken": 1.747,
+        "raw_blocked_shots": 1.067,
+        "raw_blocked_shots_hd": 1.02,
+        "raw_takeaways_high_danger": 1.071,
+        "raw_dz_faceoff_wins": 1.1,
+        "raw_crease_goals": 0.639,
+        "raw_penalties_drawn": 1.4,
+        "raw_physical_minors_taken": 2.354,
+        "raw_fighting_majors": 0.531,
+        "raw_giveaways_dz": 1.008,
+        "raw_giveaways_nz": 1.076,
+        "raw_giveaways_oz": 0.925
+      }
+    }
+  },
+  "playoff_qualification": {
+    "playoff_vs_nonplayoff": {
+      "playoff_avg_z": 0.174,
+      "playoff_n": 152,
+      "nonplayoff_avg_z": -0.205,
+      "nonplayoff_n": 129,
+      "t_stat": 3.27,
+      "p_value": 0.0012
+    },
+    "rounds_won_correlation": {
+      "r": 0.129,
+      "p": 0.113,
+      "note": "Within playoff teams only, excluding 2026"
+    },
+    "cup_winners": {
+      "avg_grit_z": 0.826,
+      "n": 10
+    }
+  },
+  "v3_vs_v21": {
+    "season": "2025-26",
+    "r_grit_z_blend": 0.965
+  }
+}
