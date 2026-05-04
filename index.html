@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GRIT v3 — Contested-Puck Contribution for the NHL</title>
+<meta name="description" content="GRIT (Gritty Role Impact Total) is a position-adjusted, weighted composite measuring per-player physical and contested-puck contribution across 10 NHL seasons." />
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --panel-2: #1c232d;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-dim: #8b949e;
+    --accent: #f85149;
+    --accent-2: #58a6ff;
+    --good: #3fb950;
+    --warn: #d29922;
+    --orange: #f9a03f;
+    --c-col: #58a6ff;
+    --w-col: #3fb950;
+    --d-col: #f85149;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg); color: var(--text);
+    padding: 24px 20px 60px; min-height: 100vh; line-height: 1.5;
+  }
+  .container { max-width: 980px; margin: 0 auto; }
+
+  /* Hero */
+  .hero {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 24px; margin-bottom: 32px;
+  }
+  h1 {
+    font-size: 32px; font-weight: 700; letter-spacing: -0.5px;
+    display: flex; align-items: center; gap: 10px; margin-bottom: 6px;
+  }
+  .v3badge {
+    background: var(--orange); color: #0d1117;
+    font-size: 12px; font-weight: 700;
+    padding: 3px 8px; border-radius: 4px; letter-spacing: 1px;
+    vertical-align: middle;
+  }
+  .tagline {
+    color: var(--text-dim); font-size: 16px; margin-bottom: 18px;
+  }
+  .lede {
+    font-size: 14px; line-height: 1.65; color: var(--text);
+    max-width: 760px;
+  }
+  .lede strong { color: var(--orange); }
+  .lede a { color: var(--accent-2); text-decoration: none; }
+  .lede a:hover { text-decoration: underline; }
+
+  /* Section heading */
+  h2 {
+    font-size: 14px; font-weight: 600; color: var(--text-dim);
+    text-transform: uppercase; letter-spacing: 1.2px;
+    margin: 32px 0 14px;
+    padding-bottom: 6px; border-bottom: 1px solid var(--border);
+  }
+
+  /* Card grid */
+  .grid {
+    display: grid; gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+  .card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px;
+    text-decoration: none; color: inherit;
+    transition: border-color 0.15s, transform 0.1s;
+    display: flex; flex-direction: column; gap: 6px;
+    position: relative;
+  }
+  .card:hover {
+    border-color: var(--accent-2);
+    transform: translateY(-1px);
+  }
+  .card .title {
+    font-size: 15px; font-weight: 600; color: var(--text);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card .desc {
+    font-size: 13px; color: var(--text-dim); line-height: 1.5;
+  }
+  .card .meta {
+    font-size: 11px; color: var(--text-dim);
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin-top: auto; padding-top: 8px;
+  }
+
+  /* Featured card (player cards) — slightly larger */
+  .card.featured {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, rgba(249,160,63,0.06), rgba(248,81,73,0.06));
+    border-color: var(--orange);
+  }
+  .card.featured .title { font-size: 17px; }
+  .card.featured:hover { border-color: var(--orange); }
+
+  /* Beta badge */
+  .beta-badge {
+    display: inline-block;
+    background: rgba(210,153,34,0.18);
+    color: var(--warn);
+    font-size: 9px; font-weight: 700;
+    padding: 2px 6px; border-radius: 3px;
+    letter-spacing: 0.6px; vertical-align: middle;
+  }
+
+  /* Doc list */
+  .docs {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 16px;
+  }
+  .docs ul { list-style: none; }
+  .docs li {
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .docs li:last-child { border-bottom: none; }
+  .docs a {
+    color: var(--accent-2); text-decoration: none;
+    font-size: 13px; display: flex; align-items: baseline; gap: 10px;
+  }
+  .docs a:hover { color: var(--text); }
+  .docs .doc-name { font-weight: 500; }
+  .docs .doc-desc { color: var(--text-dim); font-size: 12px; }
+
+  /* Footer */
+  footer {
+    margin-top: 48px; padding-top: 20px;
+    border-top: 1px solid var(--border);
+    color: var(--text-dim); font-size: 12px;
+    line-height: 1.7;
+  }
+  footer a { color: var(--text-dim); text-decoration: underline; }
+  footer a:hover { color: var(--text); }
+  .footer-row {
+    display: flex; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px;
+  }
+
+  /* Tiny pills for season tags */
+  .pos-pill {
+    display: inline-block;
+    padding: 1px 6px; border-radius: 3px;
+    font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.4px;
+    vertical-align: middle;
+  }
+  .pos-rs { background: rgba(63,185,80,0.18); color: var(--good); }
+  .pos-po { background: rgba(248,81,73,0.18); color: var(--accent); }
+
+  @media (max-width: 600px) {
+    h1 { font-size: 26px; }
+    .tagline { font-size: 14px; }
+    .grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="hero">
+  <h1>GRIT <span class="v3badge">v3</span></h1>
+  <div class="tagline">Contested-Puck Contribution for the NHL · 2015-16 through 2025-26</div>
+  <div class="lede">
+    GRIT is a position-adjusted, weighted composite that measures how much a player
+    contributes to <strong>contested-puck situations</strong> — hits, blocks, takeaways,
+    physical penalties, defensive-zone faceoff wins, crease goals, and more. The metric
+    is not a "toughness stat." It identifies players who do contested-puck work
+    regardless of role: top-line wingers who draw penalties, fourth-line centers who
+    throw 250 hits, and stay-at-home defensemen who block shots all surface honestly
+    against their own positional pool. Validated across nine NHL seasons (2020-21
+    excluded for COVID), with year-over-year repeatability of <strong>r = 0.876</strong>
+    — well above public benchmarks for Corsi/Fenwick (~0.65) and Points/60 (~0.55).
+    Full methodology and source code are in this repository.
+  </div>
+</div>
+
+<h2>Live Dashboards · 2025-26</h2>
+<div class="grid">
+
+  <a class="card" href="grit_dashboard_v3_2026.html">
+    <div class="title">Season Dashboard <span class="pos-pill pos-rs">Regular Season</span></div>
+    <div class="desc">
+      Sortable leaderboard of every qualifying player in the 2025-26 NHL regular season,
+      with Grit/60, GRIT-Z, and an ATOI vs Grit/60 scatter plot. Filter by C / W / D.
+    </div>
+    <div class="meta">578 players · Hathaway #1 (PHI)</div>
+  </a>
+
+  <a class="card" href="grit_dashboard_v3_2026_playoffs.html">
+    <div class="title">Season Dashboard <span class="pos-pill pos-po">Playoffs</span></div>
+    <div class="desc">
+      Same leaderboard format, restricted to qualifying playoff performers in the
+      2025-26 postseason. Smaller samples but higher-leverage rates — playoff GRIT
+      runs 27–46% hotter than regular season.
+    </div>
+    <div class="meta">295 players · Xhekaj #1 (MTL)</div>
+  </a>
+
+  <a class="card featured" href="viz/player_cards_v3_2026.html">
+    <div class="title">Player Cards · 2025-26 🏒</div>
+    <div class="desc">
+      Per-player breakdowns for the entire qualifying NHL skater pool. Each card shows
+      raw event totals, 5v5 / PK splits, monthly trend sparkline, ice-surface heatmap,
+      and league/positional ranks. The most detailed view of GRIT in the project.
+    </div>
+    <div class="meta">9 seasons available — see Player Cards (Archive) below for older years</div>
+  </a>
+
+</div>
+
+<h2>Cross-Season Analysis</h2>
+<div class="grid">
+
+  <a class="card" href="grit_yoy_stability.html">
+    <div class="title">Year-Over-Year Stability</div>
+    <div class="desc">
+      Pair-by-pair correlation matrix across every season pair from 2015-16 to 2025-26.
+      Includes multi-gap decay analysis (1yr through 4yr) showing GRIT identifies a
+      stable player archetype rather than year-specific role context.
+    </div>
+    <div class="meta">20 valid pairs · mean r = 0.876 (consecutive years)</div>
+  </a>
+
+  <a class="card" href="grit_playoff_delta.html">
+    <div class="title">Playoff Rate Inflation</div>
+    <div class="desc">
+      Per-player and per-team GRIT/60 inflation between regular season and playoffs,
+      with a season picker covering all 9 paired seasons. Hits go up ~60%, fighting
+      drops by half, crease goals come in slightly below RS rates.
+    </div>
+    <div class="meta">9 seasons · mean composite ratio 1.34×</div>
+  </a>
+
+</div>
+
+<h2>Player Cards (Archive)</h2>
+<div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+  <a class="card" href="viz/player_cards_v3_2025.html">
+    <div class="title">2024-25</div>
+    <div class="desc">Player cards · regular season + playoffs</div>
+  </a>
+  <a class="card" href="viz/player_cards_v3_2024.html">
+    <div class="title">2023-24</div>
+    <div class="desc">Player cards · regular season + playoffs</div>
+  </a>
+  <a class="card" href="viz/player_cards_v3_2023.html">
+    <div class="title">2022-23</div>
+    <div class="desc">Player cards · regular season + playoffs</div>
+  </a>
+  <a class="card" href="viz/player_cards_v3_2022.html">
+    <div class="title">2021-22</div>
+    <div class="desc">Player cards · regular season + playoffs</div>
+  </a>
+  <a class="card" href="viz/player_cards_v3_2020.html">
+    <div class="title">2019-20</div>
+    <div class="desc">Player cards · COVID-paused season</div>
+  </a>
+  <a class="card" href="viz/player_cards_v3_2019.html">
+    <div class="title">2018-19</div>
+    <div class="desc">Player cards · regular season + playoffs</div>
+  </a>
+  <a class="card" href="viz/player_cards_v3_2018.html">
+    <div class="title">2017-18</div>
+    <div class="desc">Player cards · regular season + playoffs</div>
+  </a>
+  <a class="card" href="viz/player_cards_v3_2017.html">
+    <div class="title">2016-17</div>
+    <div class="desc">Player cards · regular season + playoffs</div>
+  </a>
+</div>
+
+<h2>Beta &amp; Experimental</h2>
+<div class="grid">
+
+  <a class="card" href="grit_career_v3.html">
+    <div class="title">Career Aggregate <span class="beta-badge">BETA</span></div>
+    <div class="desc">
+      Multi-season career rollup. Pre-publish snapshot — methodology for cross-season
+      aggregation under CWD pooling is still being finalized.
+    </div>
+    <div class="meta">Use directional signal only</div>
+  </a>
+
+  <a class="card" href="grit_playoffs_2526.html">
+    <div class="title">Playoffs Detail · 2025-26 <span class="beta-badge">BETA</span></div>
+    <div class="desc">
+      Standalone playoff view from earlier in development. The
+      <a href="grit_dashboard_v3_2026_playoffs.html" style="color: var(--accent-2);">main playoff dashboard</a>
+      above is the supported version.
+    </div>
+    <div class="meta">Kept for archival reference</div>
+  </a>
+
+  <a class="card" href="grit_vs_pts_forwards_2526.html">
+    <div class="title">GRIT vs Points · Forwards <span class="beta-badge">BETA</span></div>
+    <div class="desc">
+      Scatter of forward GRIT-Z against scoring rate in 2025-26. Useful for surfacing
+      "skilled grit" combinations (Trocheck, Cuylle, Hartman) but not part of the
+      core methodology.
+    </div>
+    <div class="meta">2025-26 forwards only</div>
+  </a>
+
+</div>
+
+<h2>Documentation</h2>
+<div class="docs">
+  <ul>
+    <li>
+      <a href="README.md">
+        <span class="doc-name">README</span>
+        <span class="doc-desc">Project overview, validation tables, pipeline architecture, regeneration steps</span>
+      </a>
+    </li>
+    <li>
+      <a href="GRIT_v3_FAQ.md">
+        <span class="doc-name">FAQ</span>
+        <span class="doc-desc">What GRIT measures and doesn't, comparison to Corsi/Fenwick, season coverage</span>
+      </a>
+    </li>
+    <li>
+      <a href="v3_methodology.md">
+        <span class="doc-name">Methodology Specification</span>
+        <span class="doc-desc">Full event weights, spatial definitions, pooling, computation pipeline</span>
+      </a>
+    </li>
+    <li>
+      <a href="GRIT_v3_Methodology.pdf">
+        <span class="doc-name">Methodology PDF</span>
+        <span class="doc-desc">Printable reference version of the methodology document</span>
+      </a>
+    </li>
+    <li>
+      <a href="v3_validation_summary.txt">
+        <span class="doc-name">Validation Summary</span>
+        <span class="doc-desc">Full per-season YoY, pool sizes, playoff inflation tables — regenerated by build_validation_summary.py</span>
+      </a>
+    </li>
+    <li>
+      <a href="grit_scrape_runbook.md">
+        <span class="doc-name">Scrape &amp; Build Runbook</span>
+        <span class="doc-desc">Per-season commands to scrape, build, and rebuild every output in this repo</span>
+      </a>
+    </li>
+  </ul>
+</div>
+
+<footer>
+  <div class="footer-row">
+    <div>
+      Source code:
+      <a href="https://github.com/mjriggio-stack/grit-hockey">github.com/mjriggio-stack/grit-hockey</a>
+      · Data sourced from the public NHL API (api-web.nhle.com).
+    </div>
+    <div>v3 · 2025-26</div>
+  </div>
+  <div style="margin-top: 12px;">
+    A side project by a Buffalo Sabres fan, built around a sports history podcast hosted with my father.
+    If you publish analysis using GRIT, attribution to this repository is required. Issues, methodological
+    questions, and feedback welcome on
+    <a href="https://github.com/mjriggio-stack/grit-hockey/issues">GitHub</a>.
+  </div>
+</footer>
+
+</div>
+</body>
+</html>
