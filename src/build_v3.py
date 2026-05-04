@@ -76,6 +76,46 @@ import pandas as pd
 
 
 # ============================================================================
+# SQL Server connection settings
+# ============================================================================
+
+SQL_SERVER   = "localhost"
+SQL_DATABASE = "GRIT"
+SQL_DRIVER   = "ODBC Driver 17 for SQL Server"
+
+
+def get_sql_engine():
+    from sqlalchemy import create_engine
+    conn_str = (
+        f"mssql+pyodbc://@{SQL_SERVER}/{SQL_DATABASE}"
+        f"?driver={SQL_DRIVER.replace(' ', '+')}"
+        f"&trusted_connection=yes"
+        f"&TrustServerCertificate=yes"
+    )
+    return create_engine(conn_str, fast_executemany=True)
+
+
+def write_df_to_sql(engine, df, table, season, is_playoffs, strength=None):
+    """Delete existing rows for this season/playoffs/(strength) and insert fresh."""
+    from sqlalchemy import text
+    if df.empty:
+        return
+    with engine.begin() as conn:
+        if strength:
+            conn.execute(text(
+                "DELETE FROM {} WHERE season = :s AND is_playoffs = :p AND strength = :st".format(table)
+            ), {"s": season, "p": int(is_playoffs), "st": strength})
+        else:
+            conn.execute(text(
+                "DELETE FROM {} WHERE season = :s AND is_playoffs = :p".format(table)
+            ), {"s": season, "p": int(is_playoffs)})
+    # grit_scores has 30 columns — keep under SQL Server 2100 param limit
+    chunk = 50 if table == "grit_scores" else 200
+    df.to_sql(table, engine, if_exists="append", index=False, method="multi", chunksize=chunk)
+    print(f"  -> SQL {table}: {len(df)} rows")
+
+
+# ============================================================================
 # v3 weights and definitions
 # ============================================================================
 
@@ -154,12 +194,15 @@ def classify_strength(sc, side, mode):
 # ============================================================================
 
 def process_game(data, agg, identity, mode,
-                 monthly_agg=None, game_month=None, spatial_agg=None):
+                 monthly_agg=None, monthly_games=None, game_month=None, spatial_agg=None):
     """
     Walk one game's plays, accumulate events.
 
     monthly_agg: dict keyed by (player_id, "YYYY-MM") -> {"weighted_total": float}
                  Only populated on the all_strengths pass.
+    monthly_games: dict keyed by (player_id, "YYYY-MM") -> int (games appeared in)
+                 Only populated on the all_strengths pass; counted once per game
+                 from rosterSpots (so injured-but-dressed scratches don't count).
     spatial_agg: dict keyed by player_id -> list of (x, y, event_label)
                  All-strengths, no TOI floor, giveaways excluded.
     """
@@ -183,6 +226,11 @@ def process_game(data, agg, identity, mode,
                 "position": spot.get("positionCode", "?"),
                 "team_abbr": home_abbr if tid == home_id else away_abbr,
             }
+            # Count one game-appearance per player per month for sparklines.
+            # Only goalies should be excluded; their position code is "G".
+            if (monthly_games is not None and game_month
+                    and spot.get("positionCode") != "G"):
+                monthly_games[(pid, game_month)] = monthly_games.get((pid, game_month), 0) + 1
 
     for p in data.get("plays", []):
         sc = p.get("situationCode")
@@ -200,13 +248,40 @@ def process_game(data, agg, identity, mode,
                     monthly_agg[(player_id, game_month)]["weighted_total"] += weight
 
         def record_spatial(player_id, label):
-            """Store normalised (x, y, label) — attacking direction always positive-x."""
+            """
+            Store (x, y, label) flipped so the player's attacking direction is +x.
+
+            Defensive-zone events therefore appear on the left of a viz, offensive
+            on the right. Flip is determined per-play from homeTeamDefendingSide
+            ('left' or 'right'); falls back to raw coords if that field is missing.
+            y is mirrored along with x to preserve rink geometry (left wing stays
+            left wing relative to the attacking direction).
+            """
             if spatial_agg is None or not player_id:
                 return
             if x is None or y is None:
                 return
-            nx = abs(x)
-            ny = y if x >= 0 else -y
+
+            player_side = side.get(player_id)  # "home" or "away"
+            home_def = p.get("homeTeamDefendingSide")  # "left" or "right" or None
+
+            if home_def in ("left", "right") and player_side in ("home", "away"):
+                # The home team attacks the opposite side from where they defend;
+                # the away team attacks the side home defends.
+                if player_side == "home":
+                    attacking = "right" if home_def == "left" else "left"
+                else:
+                    attacking = home_def
+                # Normalize so attacking direction is +x. Mirror y to preserve
+                # rink geometry (left wing stays left wing relative to attack).
+                if attacking == "left":
+                    nx, ny = -x, -y
+                else:
+                    nx, ny = x, y
+            else:
+                # Side info missing — store raw and let the viz handle it.
+                nx, ny = x, y
+
             spatial_agg[player_id].append((nx, ny, label))
 
         if ev == "hit":
@@ -349,44 +424,37 @@ def build_dataframe(agg, identity, toi_map, gp_map, mode):
     return df[V2_1_COLUMNS]
 
 
-def build_monthly(monthly_agg, identity, toi_df):
+def build_monthly(monthly_agg, monthly_games, identity):
     """
     Build per-player per-month summary for sparklines.
 
-    Monthly TOI isn't in the PBP cache, so we approximate it by prorating
-    season TOI by each month's share of the season weighted_total.
-    Shape of the sparkline is accurate; absolute per-60 values are approximate.
+    Per-game (not per-60). Per-60 requires monthly TOI which the PBP cache
+    doesn't carry; the season-TOI proration we used previously cancelled out
+    algebraically and produced a flat line for every player.
+
+    Per-game is the slice of `grit_per_game` (already used at season level)
+    cut by month. Shape matches what users care about — was this player
+    contributing more or fewer events per game month-over-month.
 
     Output columns:
         player_id, name, position, team, month, weighted_total,
-        approx_toi_min, raw_grit_per_60
+        games_in_month, raw_grit_per_game
     """
-    season_wt = defaultdict(float)
-    for (pid, month), vals in monthly_agg.items():
-        season_wt[pid] += vals["weighted_total"]
-
-    toi_total = dict(zip(toi_df["player_id"], toi_df["total_toi_min"]))
-
     rows = []
     for (pid, month), vals in monthly_agg.items():
-        wt           = vals["weighted_total"]
-        season_total = season_wt.get(pid, 0)
-        toi_season   = toi_total.get(pid, 0)
-        if season_total > 0 and toi_season > 0:
-            approx_toi = toi_season * (wt / season_total)
-        else:
-            approx_toi = 0.0
-        per60 = (wt / approx_toi * 60.0) if approx_toi > 0 else 0.0
+        wt    = vals["weighted_total"]
+        gp    = monthly_games.get((pid, month), 0)
+        per_g = (wt / gp) if gp > 0 else 0.0
         ident = identity.get(pid, {})
         rows.append({
-            "player_id":      pid,
-            "name":           ident.get("name", ""),
-            "position":       ident.get("position", "?"),
-            "team":           ident.get("team_abbr", ""),
-            "month":          month,
-            "weighted_total": round(wt, 2),
-            "approx_toi_min": round(approx_toi, 1),
-            "raw_grit_per_60": round(per60, 4),
+            "player_id":         pid,
+            "name":              ident.get("name", ""),
+            "position":          ident.get("position", "?"),
+            "team":              ident.get("team_abbr", ""),
+            "month":             month,
+            "weighted_total":    round(wt, 2),
+            "games_in_month":    gp,
+            "raw_grit_per_game": round(per_g, 4),
         })
 
     df = pd.DataFrame(rows)
@@ -463,10 +531,31 @@ def main():
                     help="Skip monthly output")
     ap.add_argument("--no-spatial",  action="store_true",
                     help="Skip spatial output")
+    ap.add_argument("--no-sql",      action="store_true",
+                    help="Skip SQL Server writes")
     args = ap.parse_args()
 
     out_dir = Path(args.output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
+
+    # SQL engine
+    sql_engine = None
+    if not args.no_sql:
+        try:
+            sql_engine = get_sql_engine()
+            from sqlalchemy import text
+            with sql_engine.connect() as conn:
+                conn.execute(text("SELECT 1"))
+            print("SQL connection: OK")
+        except Exception as e:
+            print(f"SQL connection failed: {e} — writing CSVs only")
+            sql_engine = None
+
+    # Parse season and is_playoffs from season_tag
+    import re as _re
+    _m = _re.match(r'(\d{4})(_playoffs)?$', args.season_tag)
+    season      = int(_m.group(1)) if _m else 0
+    is_playoffs = bool(_m.group(2)) if _m else False
 
     files = sorted(os.listdir(args.pbp_cache))
     print(f"\nReading {len(files)} game files from {args.pbp_cache}")
@@ -476,8 +565,9 @@ def main():
     agg_pk  = defaultdict(lambda: defaultdict(int))
     identity = {}
 
-    monthly_agg = defaultdict(lambda: {"weighted_total": 0.0}) if not args.no_monthly else None
-    spatial_agg = defaultdict(list) if not args.no_spatial else None
+    monthly_agg   = defaultdict(lambda: {"weighted_total": 0.0}) if not args.no_monthly else None
+    monthly_games = {}                                              if not args.no_monthly else None
+    spatial_agg   = defaultdict(list)                               if not args.no_spatial else None
 
     for fn in files:
         fpath = os.path.join(args.pbp_cache, fn)
@@ -487,8 +577,8 @@ def main():
         game_month = game_date_from_file(fn, data) if not args.no_monthly else None
 
         process_game(data, agg_all, identity, "all_strengths",
-                     monthly_agg=monthly_agg, game_month=game_month,
-                     spatial_agg=spatial_agg)
+                     monthly_agg=monthly_agg, monthly_games=monthly_games,
+                     game_month=game_month, spatial_agg=spatial_agg)
         process_game(data, agg_5v5, identity, "five_v_five")
         process_game(data, agg_pk,  identity, "pk")
 
@@ -508,25 +598,41 @@ def main():
     out_all = out_dir / f"grit_per_60_v3_{args.season_tag}.csv"
     df_all.to_csv(out_all, index=False)
     print(f"  Wrote {len(df_all)} rows to {out_all}")
+    if sql_engine is not None:
+        _df_sql = df_all.copy()
+        _df_sql["season"] = season; _df_sql["is_playoffs"] = int(is_playoffs); _df_sql["strength"] = "all"
+        write_df_to_sql(sql_engine, _df_sql, "grit_scores", season, is_playoffs, "all")
 
     print(f"\nBuilding 5v5 file...")
     df_5v5 = build_dataframe(agg_5v5, identity, toi_5v5, gp, modes["five_v_five"])
     out_5v5 = out_dir / f"grit_5v5_v3_{args.season_tag}.csv"
     df_5v5.to_csv(out_5v5, index=False)
     print(f"  Wrote {len(df_5v5)} rows to {out_5v5}")
+    if sql_engine is not None:
+        _df_sql = df_5v5.copy()
+        _df_sql["season"] = season; _df_sql["is_playoffs"] = int(is_playoffs); _df_sql["strength"] = "5v5"
+        write_df_to_sql(sql_engine, _df_sql, "grit_scores", season, is_playoffs, "5v5")
 
     print(f"\nBuilding PK file...")
     df_pk = build_dataframe(agg_pk, identity, toi_pk, gp, modes["pk"])
     out_pk = out_dir / f"grit_pk_v3_{args.season_tag}.csv"
     df_pk.to_csv(out_pk, index=False)
     print(f"  Wrote {len(df_pk)} rows to {out_pk}")
+    if sql_engine is not None:
+        _df_sql = df_pk.copy()
+        _df_sql["season"] = season; _df_sql["is_playoffs"] = int(is_playoffs); _df_sql["strength"] = "pk"
+        write_df_to_sql(sql_engine, _df_sql, "grit_scores", season, is_playoffs, "pk")
 
     if not args.no_monthly:
         print(f"\nBuilding monthly file...")
-        df_monthly = build_monthly(monthly_agg, identity, toi_df)
+        df_monthly = build_monthly(monthly_agg, monthly_games, identity)
         out_monthly = out_dir / f"grit_monthly_v3_{args.season_tag}.csv"
         df_monthly.to_csv(out_monthly, index=False)
         print(f"  Wrote {len(df_monthly)} rows to {out_monthly}")
+        if sql_engine is not None:
+            _df_sql = df_monthly.copy()
+            _df_sql["season"] = season; _df_sql["is_playoffs"] = int(is_playoffs)
+            write_df_to_sql(sql_engine, _df_sql, "grit_monthly", season, is_playoffs)
 
     if not args.no_spatial:
         print(f"\nBuilding spatial file...")
@@ -534,6 +640,10 @@ def main():
         out_spatial = out_dir / f"grit_spatial_v3_{args.season_tag}.csv"
         df_spatial.to_csv(out_spatial, index=False)
         print(f"  Wrote {len(df_spatial)} rows to {out_spatial}")
+        if sql_engine is not None:
+            _df_sql = df_spatial.copy()
+            _df_sql["season"] = season; _df_sql["is_playoffs"] = int(is_playoffs)
+            write_df_to_sql(sql_engine, _df_sql, "grit_spatial", season, is_playoffs)
 
     print(f"\nDone. Outputs in: {out_dir}")
 
