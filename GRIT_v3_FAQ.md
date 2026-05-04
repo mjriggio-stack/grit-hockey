@@ -6,7 +6,7 @@
 
 GRIT (Gritty Role Impact Total) is a hockey analytics metric that measures **contested-puck contribution** — a count of the events that happen when a player is physically competing for or against a puck in a contested area of the ice.
 
-It is position-adjusted, rate-normalized, and validated across six NHL seasons (2019-20 through 2025-26).
+It is position-adjusted, rate-normalized, and validated across nine NHL seasons (2015-16 through 2025-26, with the 2020-21 COVID season intentionally excluded).
 
 ---
 
@@ -77,15 +77,17 @@ This is the strongest version of the skeptic's argument and deserves a direct an
 
 If GRIT were measuring survival behavior — players repeating the same role to keep their job — you'd expect high turnover in the leaderboard as roster compositions change. What the data actually shows:
 
-| Window | Correlation (r) |
-|---|---:|
-| Year-over-year (avg across 5 pairs) | 0.86 |
-| 2-year gap | 0.87 |
-| 3-year gap | 0.75 |
-| 4-year gap | 0.77 |
-| 6-year gap (2019-20 → 2025-26) | 0.75 |
+| Window | Correlation (r) | n pairs |
+|---|---:|---:|
+| Year-over-year (consecutive seasons) | 0.876 | 8 |
+| 2-year gap | 0.825 | 6 |
+| 3-year gap | 0.788 | 4 |
+| 4-year gap | 0.781 | 2 |
+| 6-year long-horizon (2019-20 → 2025-26)* | 0.75 | 1 |
 
-For context: Corsi/Fenwick year-over-year repeatability is approximately 0.60–0.70. Points per 60 is approximately 0.50–0.60. GRIT at 0.86 year-over-year — and 0.75 across six seasons — is more stable than either of those benchmarks.
+*The 6-year horizon spans the excluded 2020-21 COVID season, so it's a long-window spot check rather than part of the consecutive-pair series.
+
+For context: Corsi/Fenwick year-over-year repeatability is approximately 0.60–0.70. Points per 60 is approximately 0.50–0.60. GRIT at 0.876 year-over-year — and still around 0.75 across a six-year span — is more stable than either of those benchmarks.
 
 That's not roster churn. That's a durable, repeatable individual characteristic of how players play the game.
 
@@ -141,7 +143,7 @@ The NHL API captures the outcomes of puck contests well. What it misses is the p
 GRIT is not designed to replace existing metrics — it measures a different dimension of the game. The closest public comparisons:
 
 - **Hits and blocks (raw counts):** GRIT incorporates these but weights them by leverage, combines them with other events, and normalizes by ice time. Raw hit counts don't distinguish between a hit in the slot and a hit along the boards in the defensive zone.
-- **Corsi/Fenwick:** Measures shot attempt share — a proxy for puck possession and zone time. Year-over-year repeatability ~0.60–0.70. GRIT repeatability ~0.86. Different dimensions.
+- **Corsi/Fenwick:** Measures shot attempt share — a proxy for puck possession and zone time. Year-over-year repeatability ~0.60–0.70. GRIT repeatability ~0.876 across consecutive seasons. Different dimensions.
 - **Points per 60:** Measures offensive production. Year-over-year repeatability ~0.50–0.60. Not a close comparison — GRIT and scoring are largely orthogonal (though some top scorers rank highly on GRIT too, via crease goals and penalties drawn).
 - **WAR-based metrics (Evolving Hockey, MoneyPuck):** Comprehensive value metrics that attempt to capture total player contribution. GRIT is narrower by design — it measures one specific dimension (contested-puck contribution) rather than total value.
 
@@ -160,18 +162,25 @@ The scraper (`scrape_v3.py`) and builder (`build_v3.py`) are both open source in
 
 ## How many seasons does GRIT cover?
 
-GRIT v3 currently covers six seasons:
+GRIT v3 currently covers ten regular seasons (one of which — 2020-21 — is excluded from the career aggregate per the COVID exception below):
 
 | Season | Notes |
 |---|---|
+| 2015-16 | Full 82-game season |
+| 2016-17 | Full 82-game season |
+| 2017-18 | Full 82-game season |
+| 2018-19 | Full 82-game season |
 | 2019-20 | COVID-paused March 12 — 71 games for most teams |
+| 2020-21 | COVID bubble (56 games) — **excluded** from the project per shortened-format/abnormal-conditions exception |
 | 2021-22 | Full 82-game season |
 | 2022-23 | Full 82-game season |
 | 2023-24 | Full 82-game season |
 | 2024-25 | Full 82-game season |
 | 2025-26 | Full 82-game season |
 
-The 2020-21 season (COVID bubble, 56 games) is intentionally excluded from the career aggregate due to its shortened format and abnormal competitive conditions.
+Nine of these (every season except 2020-21) carry data. Year-over-year correlation pairs that would bridge the COVID gap are also excluded from the validation summary.
+
+Playoff GRIT is computed separately for every season above except 2019-20 (which had a COVID-altered playoff format) and 2020-21 (excluded above).
 
 ---
 
