@@ -1,130 +1,206 @@
-# GRIT v3
+# GRIT v3 — Deliverable
 
-**GRIT (Gritty Role Impact Total)** is a position-adjusted, weighted composite metric measuring physical and contested-puck contribution for NHL skaters. Built and maintained by Matthew Riggio of the [Echoes from the Arena](https://www.youtube.com/@EchoesfromtheArena) podcast.
+This package contains everything needed to reproduce, validate, and use GRIT v3.
 
----
+## What GRIT actually measures
 
-## What GRIT measures
+GRIT is a measure of **contested-puck contribution** — it counts the events that happen when a player is competing for or against the puck in a contested area. It is positionally agnostic and archetype agnostic: a top-line winger who draws penalties, a fourth-line C who throws hits, and a stay-at-home D who blocks shots are all measured against the events they produced, not against an idea of what their role should look like.
 
-GRIT counts what happens when players battle for pucks. Hits thrown and taken, blocked shots, takeaways, crease goals, defensive-zone faceoff wins, penalties drawn, physical minors, fights, and giveaways, each weighted by its estimated value. Each event is weighted by its estimated contribution, rates are normalized per 60 minutes of ice time, and z-scores are computed within position pools so centers are compared against centers, wings against wings, and defensemen against defensemen.
+The metric's name primes readers to expect a "toughness stat." That's not what it is. It's perfectly possible — and not a bug — for skilled top-six players to rank highly on GRIT if they do contested-puck work (Trocheck, Cuylle, Krebs, Hartman are 25-26 examples). When presenting GRIT outputs publicly, lead with "contested-puck contribution" rather than "grit" to keep the framing honest. The full discussion is in `v3_methodology.md` §0.
 
-One thing worth saying up front: **GRIT is not a grinder metric.** The name implies it, but the math doesn't back it up. A 5'10" winger who draws 25 penalties and scores 12 crease goals scores well on GRIT. So does a top-six center who throws 200 hits while putting up 60 points. The metric doesn't care about role or archetype. It counts contested-puck contribution honestly, which means the leaderboard looks different from what you'd expect if you filtered purely by reputation.
+## What is v3?
 
-Vincent Trocheck (NYR) is a consistent top-15 center on this metric. Ryan Hartman (MIN) ranks in the top 25 among wings despite throwing fewer hits than almost everyone else on that list. Peyton Krebs (BUF), listed at 184 lbs and playing top-line minutes, ranks inside the top 25 among NHL centers. None of them fit the traditional "grit guy" archetype. All of them show up because they compete in contested areas at an elite rate.
+v3 = v2.1 baseline + 5 design changes.
 
----
+It builds on v2.1 (which itself was v2 with bug fixes and spatial methodology realignment). v3 adds weight tuning and pooling changes that v2.1 explicitly did not include.
 
-## Season coverage
+### Changes from v2.1
 
-**Regular seasons:** 2015-16 through 2025-26, skipping 2020-21.
+**Weight changes:**
+1. **Crease goals: 7.5 → 10.0** — top-tier weight. Players who go to the dirty areas to score deserve the strongest GRIT credit, on par with no other event. The methodology now treats getting to the doorstep as the highest-leverage scoring activity.
 
-**Playoffs:** 2015-16 through 2025-26, skipping 2020-21.
+2. **Fighting majors: 5.5 → 3.5** — mid-tier weight. The methodology document's §7.7 (regression robustness check) noted that fights are individually stable year-over-year, which inflates regression-derived weights for them. Bringing fighting down to mid-tier prevents v3 from over-rewarding the small number of designated fighters in the league.
 
-The 2019-20 season is included with a caution note. The COVID bubble produced a non-standard schedule with no home/away context and compressed games, which affects some event rates. Year-over-year comparisons involving 2020 should be interpreted carefully.
+3. **Hits thrown: 2.5 → 3.0** — bumped to mid-tier. Hits thrown has the highest YoY repeatability of any GRIT event (r ≈ 0.92) and is the most common positive event by volume. Strengthening its weight aligns importance with stability.
 
-The 2020-21 season is excluded entirely. The 56-game format and unusual schedule make it an outlier that would distort multi-season analysis.
+4. **OZ giveaways: −1.0 → 0.0** — neutralized. Offensive-zone giveaways aren't a "bad" event in the way DZ giveaways are; they're often the cost of trying to make a play in a dangerous area. Penalizing them discourages exactly the offensive risk-taking that produces scoring chances. NZ giveaways stay at −1.5; DZ giveaways stay at −2.5.
 
----
+**Pooling change:**
+5. **F/D → C/W/D** — centers split from wings; defense unchanged.
 
-## Why it holds up
+   The argument: a winger structurally cannot win a defensive-zone faceoff. Comparing wingers against centers in the same pool means wingers get penalized for not having a skill they can't legally exhibit. CWD pooling makes the comparison fair: wingers compete against wingers, centers against centers, defense against defense.
 
-GRIT z-scores are more stable year-over-year than forward points across every season pair in this dataset. The average Pearson r between consecutive seasons is 0.877 for GRIT z versus 0.809 for forward points. That gap holds in every single season pair going back to 2015-16.
+   The cost: pool sizes drop (~370 → ~180-200), which mechanically reduces YoY stability by ~2-3 points of correlation. We accept this trade-off for positional fairness — see Validation section.
 
-This matters because stability is one of the best tests of whether a metric is measuring something real about a player versus capturing noise. GRIT passes that test more consistently than scoring does.
+### What's UNCHANGED from v2.1 (and from v2 where applicable)
 
----
+- All other weights (penalties drawn 5.5, physical minors 5.5, HD takeaways 3.5, DZ faceoff wins 2.0, other takeaways 2.0, hits taken 1.5, NZ giveaways −1.5, DZ giveaways −2.5)
+- HD spatial definitions (12-ft circle for crease goals, slot rectangle for HD takeaways AND HD blocks)
+- Block subdivision (HD blocks +4.0, non-HD blocks +3.0; aggregate ~3.45 per block)
+- Physical minor list (documented six only: roughing, charging, boarding, cross-checking, elbowing, interference)
+- PK strength filter (generous SH; team has fewer skaters than opponent, any goalie state)
+- Bug fixes for the three v2 PK strength-inversion bugs (blocks, hits taken, penalties drawn)
+- 0.7 rate / 0.3 volume blend ratio
+- TOI floors (RS: 600 all / 400 5v5 / 30 PK; playoffs: 25 all / 15 5v5 / 5 PK)
 
-## Files
+## Validation
 
-### Per-player data
+> All numbers in this section are regenerated programmatically from the per_60 CSVs by `build_validation_summary.py`. The full breakdown lives in `v3_validation_summary.txt` and is rebuilt every time underlying data changes.
 
-| File | Description |
-|------|-------------|
-| `grit_per_60_v3_{year}.csv` | All-strengths per-60, z-scores by position pool |
-| `grit_5v5_v3_{year}.csv` | 5v5 only (situationCode 1551) |
-| `grit_pk_v3_{year}.csv` | Penalty kill only |
-| `grit_monthly_v3_{year}.csv` | Monthly GRIT rate breakdown |
-| `grit_per_60_v3_{year}_playoffs.csv` | Playoff all-strengths per-60 |
-| `grit_5v5_v3_{year}_playoffs.csv` | Playoff 5v5 |
-| `grit_pk_v3_{year}_playoffs.csv` | Playoff PK |
-| `grit_monthly_v3_{year}_playoffs.csv` | Playoff monthly breakdown |
+### YoY repeatability (grit_z_blend, regular season)
 
-Year tags follow NHL convention: `2026` = 2025-26 season.
+Across 8 consecutive-year pairs spanning 2015-16 through 2025-26 (the 2020-21 COVID season is intentionally excluded from the project):
 
-Note: the 2020 and 2022 season folders do not include monthly files. Monthly breakdowns were not collected for those seasons and cannot be reconstructed from the available data.
+| Pair | n | v3 r |
+|---|---:|---:|
+| 2015-16 ↔ 2016-17 | 431 | 0.887 |
+| 2016-17 ↔ 2017-18 | 444 | 0.863 |
+| 2017-18 ↔ 2018-19 | 466 | 0.882 |
+| 2018-19 ↔ 2019-20 | 448 | 0.872 |
+| 2021-22 ↔ 2022-23 | 474 | 0.883 |
+| 2022-23 ↔ 2023-24 | 472 | 0.861 |
+| 2023-24 ↔ 2024-25 | 478 | 0.878 |
+| 2024-25 ↔ 2025-26 | 485 | 0.880 |
 
-### Career and team data
+**Mean r = 0.876 across 8 pairs**, range 0.861–0.887. v3 sits well above public benchmarks: Corsi/Fenwick repeatability is typically reported at r ≈ 0.6–0.7, Points/60 at r ≈ 0.5–0.6.
 
-| File | Description |
-|------|-------------|
-| `grit_career_v3.csv` | Career totals and z-scores, all skaters with 3+ seasons |
-| `grit_team_rollup_v3_allseasons.csv` | Team-level GRIT aggregates, all seasons |
+### YoY decay across multi-season gaps
 
-### Key columns
+Stability decays as the gap between seasons widens, but plateaus after 2-3 years. This is the signature of a metric capturing stable player archetype rather than year-specific role context.
 
-| Column | Description |
-|--------|-------------|
-| `grit_z_blend` | Primary z-score: 70% positional rate z, 30% volumetric z |
-| `grit_z_pos` | Positional rate z-score (within C, W, or D pool) |
-| `grit_z_vol` | Volumetric z-score (total weighted events) |
-| `raw_grit_per_60` | Weighted event total per 60 minutes, before z-scoring |
-| `grit_per_game` | Weighted event total per game |
-| `raw_blocked_shots_hd` | Blocked shots from the slot rectangle |
-| `raw_blocked_shots_non_hd` | Blocked shots outside the slot |
-| `raw_crease_goals` | Goals scored within 12 feet of the net |
-| `raw_takeaways_high_danger` | Takeaways from the slot rectangle |
+| Gap | # pairs | Mean r | Range |
+|---|---:|---:|---:|
+| 1 year | 8 | 0.876 | 0.861–0.887 |
+| 2 years | 6 | 0.825 | 0.797–0.836 |
+| 3 years | 4 | 0.788 | 0.768–0.806 |
+| 4 years | 2 | 0.781 | 0.768–0.795 |
 
-Full column documentation is in `GRIT_v3_Methodology.pdf`.
+### YoY by position pool (24-25 ↔ 25-26)
 
----
+| Pool | n | r |
+|---|---:|---:|
+| C | 159 | 0.871 |
+| L | 85 | 0.893 |
+| R | 73 | 0.913 |
+| D | 168 | 0.871 |
 
-## Dashboards
+C and D are the lowest-correlated pools — likely because both have the broadest range of role types compared against each other (top-pair D vs sheltered third-pair D; 1C vs 4C). Wingers cluster more tightly because role differentiation is narrower.
 
-Open any of the HTML files in a browser. No installation required.
+### Pool sizes under CWD (25-26)
 
-| File | Description |
-|------|-------------|
-| `grit_dashboard_v3_2026.html` | 2025-26 regular season leaderboard |
-| `grit_dashboard_v3_2026_playoffs.html` | 2025-26 playoffs leaderboard |
-| `grit_playoff_delta_2526.html` | Playoff GRIT elevation, 2025-26 |
-| `grit_playoff_delta_2425.html` | Playoff GRIT elevation, 2024-25 |
-| `grit_playoff_delta_2324.html` | Playoff GRIT elevation, 2023-24 |
-| `grit_yoy_stability.html` | Year-over-year stability, GRIT z vs points |
+C = 187, W = 187, D = 204. Balanced. The L/R wing split is roughly 49/51 across the project.
 
-The regular season and playoff dashboards have a CSV upload button. When new data is available, drop in the corresponding `grit_per_60_v3_{year}.csv` file to refresh without rebuilding the page.
+### Playoff vs RS rate inflation
 
-The playoff delta dashboards show raw GRIT/60 change between a player's regular season and playoff performance, normalized so the baseline playoff intensity increase washes out. What remains is who actually elevated relative to their peers.
+Playoffs run **27-46% hotter** than regular season on raw weighted GRIT rate per 60. The ratio is meaningfully variable year-to-year and is not "stable" in the strong sense the previous version of this README claimed.
 
----
+| Season | RS rate/60 | PO rate/60 | Ratio |
+|---|---:|---:|---:|
+| 2015-16 | 40.94 | 52.16 | 1.27× |
+| 2016-17 | 39.50 | 51.28 | 1.30× |
+| 2017-18 | 39.90 | 51.18 | 1.28× |
+| 2018-19 | 39.77 | 51.22 | 1.29× |
+| 2021-22 | 40.58 | 56.05 | 1.38× |
+| 2022-23 | 41.85 | 55.11 | 1.32× |
+| 2023-24 | 43.48 | 57.81 | 1.33× |
+| 2024-25 | 38.37 | 55.90 | 1.46× |
+| 2025-26 | 36.60 | 53.10 | 1.45× |
 
-## Methodology
+**Mean ratio across 9 seasons: 1.34×.** The most recent two seasons (2024-25 and 2025-26) are the highest in the dataset — whether that's a real upward trend or noise in a 9-season sample is open.
 
-Full methodology is in `GRIT_v3_Methodology.pdf`. The short version:
+Per-event rate ratios (PO/RS, mean across 9 seasons):
 
-- 14 weighted event types, each assigned a weight reflecting its estimated contested-puck value
-- Rates normalized per 60 minutes of ice time
-- Z-scores computed within position pools: C vs C, W vs W, D vs D
-- Blended z-score: 70% rate-based, 30% volume-based
-- TOI floors applied to exclude small-sample outliers
+| Event | Mean ratio | Range |
+|---|---:|---:|
+| Hits thrown | 1.63× | 1.48–1.87 |
+| Hits taken | 1.58× | 1.42–1.79 |
+| Physical minors taken | 1.68× | 1.39–2.35 |
+| Penalties drawn | 1.16× | 0.98–1.40 |
+| Blocked shots | 1.12× | 1.07–1.19 |
+| Giveaways (NZ) | 1.17× | 0.88–1.54 |
+| Giveaways (DZ) | 1.07× | 0.88–1.34 |
+| Giveaways (OZ) | 1.04× | 0.80–1.27 |
+| HD takeaways | 1.03× | 0.83–1.26 |
+| Other takeaways | 1.03× | 0.82–1.20 |
+| DZ faceoff wins | 1.02× | 0.97–1.10 |
+| Crease goals | 0.87× | 0.64–1.03 |
+| Fighting majors | 0.48× | 0.24–0.74 |
 
-Changes from v2 and v2.1, including three confirmed bug fixes in the penalty kill file, are documented in `CHANGELOG.md`.
+The fighting and crease-goal patterns are the most robust signals: fighting roughly halves in the playoffs across every season in the dataset, and crease goals come in slightly below RS rates because the goalie is harder to beat in close. Hit-related events show clear secular increase over time — 2024-25 and 2025-26 hit ratios are visibly higher than 2015-19.
 
----
+See `v3_validation_summary.txt` for full per-season per-event breakdowns. Regenerate with:
 
-## What is coming in v3.1
+```powershell
+python build_validation_summary.py `
+    --data-dir "C:\Users\mjrig\OneDrive\Documents\Grit\Version 3\data" `
+    --output-dir "C:\Users\mjrig\OneDrive\Documents\GitHub\grit-hockey"
+```
 
-Targeting release before the end of May 2026.
+## Pipeline architecture
 
-- Earning Your Points forward visualization: a career and single-season quadrant view showing which forwards are producing points relative to their physical contribution
-- Earning Your Points career scatter: all eligible forwards plotted by career average GRIT z and career average points
-- Team GRIT identity over time
-- Playoff success analysis
+The full pipeline has three stages, each backed by both disk and SQL Server.
 
----
+```
+┌─────────────────┐       ┌─────────────────┐       ┌──────────────────────┐
+│  scrape_v3.py   │  -->  │   build_v3.py   │  -->  │ build_player_cards.py│
+└─────────────────┘       └─────────────────┘       └──────────────────────┘
+       │                          │                          │
+       ▼                          ▼                          ▼
+  PBP JSON cache             v3 CSVs on disk             player_cards_v3.html
+  + raw_plays in SQL         + grit_scores in SQL        + sidecar JSON
+                             + grit_monthly in SQL
+                             + grit_spatial in SQL
+```
 
-## Credit and use
+**Stage 1 — `scrape_v3.py`** pulls play-by-play and TOI data from the NHL API. JSON files land on disk and rows go into the `raw_plays` table in the local `GRIT` SQL database. SQL is on by default; pass `--no-sql` to skip.
 
-Built by Matthew Riggio. If you use GRIT data or methodology in your work, please credit GRIT v3 by Matthew Riggio and link back to this repository.
+**Stage 2 — `build_v3.py`** reads the disk PBP cache, computes GRIT, writes CSVs to the season's output folder, and inserts rows into `grit_scores`, `grit_monthly`, and `grit_spatial`. CSV writes are unconditional; SQL writes are on by default with `--no-sql` available.
 
-Questions, feedback, and corrections are welcome. Email is mjriggio@gmail.com  Find the podcast at [Echoes from the Arena](https://www.youtube.com/@EchoesfromtheArena).
+**Stage 3 — `build_player_cards.py`** reads from SQL (preferred) and emits `player_cards_v3_{season}.html` plus a `_data.json` sidecar. Falls back to the CSVs if SQL is unavailable. The HTML is ~110 KB; the JSON sidecar is ~1 MB. Both must be served together.
 
+## How to regenerate v3 from scratch
+
+You'll need:
+1. SQL Server with a `GRIT` database, set up with the schema described in `v3_methodology.md` (or via past session notes)
+2. Network access to `api-web.nhle.com`
+
+```powershell
+# Stage 1: scrape one season
+python scrape_v3.py `
+    --season 2026 `
+    --output-dir "C:\Users\mjrig\OneDrive\Documents\Grit\cache\2026"
+
+# Stage 2: build CSVs + load SQL
+python build_v3.py `
+    --pbp-cache "C:\Users\mjrig\OneDrive\Documents\Grit\cache\2026\pbp" `
+    --toi       "C:\Users\mjrig\OneDrive\Documents\Grit\cache\2026\toi_2026.csv" `
+    --output-dir "C:\Users\mjrig\OneDrive\Documents\Grit\Version 3\data\2026" `
+    --season-tag 2026
+
+# Stage 3: build the player card HTML + sidecar
+python build_player_cards.py `
+    --season 2026 `
+    --output-dir "C:\Users\mjrig\OneDrive\Documents\Grit\Version 3\viz"
+```
+
+For playoffs, append `--playoffs` to stages 1 and 2 and use `_playoffs`-suffixed paths/tags. See `grit_scrape_runbook.md` for the full per-season checklist.
+
+To run any stage without SQL (e.g. SQL Server stopped, working from a laptop), append `--no-sql`. `build_v3.py` will write only CSVs; `build_player_cards.py` requires `--data-dir` pointing at the CSV folder when SQL is off.
+
+## Defensible podcast claims under v3
+
+These are statements the data actually supports across all 9 seasons in the dataset (2015-16 through 2025-26 excluding the 2020-21 COVID season). Numbers can be regenerated from `build_validation_summary.py`.
+
+- "Hits go up about 60% in the playoffs — both thrown and taken." (Mean 1.63× thrown, 1.58× taken; consistent across every season.)
+- "Physical penalties (boarding, charging, cross-checking, roughing, elbowing, interference) go up about 70% in playoffs." (Mean 1.68×; ranges from 1.39× to 2.35× year to year.)
+- "Fighting actually goes down by half in playoffs — counter to the intensity narrative." (Mean 0.48× across every season; this is the most robust pattern in the data.)
+- "Crease goals don't go up in playoffs — they come in slightly lower than RS rates. Playoff hockey is harder to score in close, not easier." (Mean 0.87×; below 1.0 in 8 of 9 seasons.)
+- "Aggregate contested-puck event rate is roughly 30% higher in playoffs." (Mean ratio 1.34×; consistent direction every season but the magnitude varies from 1.27× to 1.46×.)
+- "v3 trades ~2-3 points of YoY stability for positional fairness — wingers no longer compete against centers in the same pool." (Mean YoY r = 0.876 under CWD; comparison to v2's F/D pooling cost roughly 2 points of correlation.)
+- "Year-over-year stability decays gradually but plateaus after 2-3 seasons. GRIT identifies a stable player archetype, not a year-specific role." (1-yr r = 0.876, 2-yr = 0.825, 3-yr = 0.788, 4-yr = 0.781.)
+
+## Things v3 does NOT address
+
+- **Low-TOI rate noise on PK.** The 30-min PK TOI floor allows players with very small samples to surface near the top of rate-based z-scores. Affects v2, v2.1, and v3 equally.
+- **The 1.25× SH multiplier from v2's methodology** is documented but not separately tracked in v3 outputs. Events are counted at face value.
+- **Visual design of player cards is unchanged from earlier versions.** The card layout, color palette, and rink artwork carried forward unmodified through the SQL migration. A redesign is a separate task.
