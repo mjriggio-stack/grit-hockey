@@ -4,7 +4,7 @@ This document specifies GRIT v3 in full. v3 builds on v2.1 (which itself fixed b
 
 ## 0. What GRIT measures (and what it doesn't)
 
-GRIT measures **contested-puck contribution**. It counts what happens when players battle for pucks: hits thrown and taken, blocked shots, takeaways, crease-area goals, defensive-zone faceoff wins, penalties drawn, physical minors, fights, and giveaways, each weighted by its estimated value.
+GRIT measures **contested-puck contribution**. It's a positionally-agnostic, archetype-agnostic count of the events that happen when a player is competing for or against a puck in a contested area: hits thrown and taken, blocked shots, takeaways and giveaways, defensive-zone faceoff wins, penalties drawn, physical minors, fights, and crease-area goals.
 
 Critically, GRIT is **not** a measure of toughness, body size, role designation, or "grinding." Those concepts are how mainstream hockey commentary describes some of the players who tend to score well on GRIT, but they are descriptions of *archetype*, not of what the metric actually counts.
 
@@ -104,7 +104,7 @@ This replaces v2 and v2.1's F/D pooling, where forwards (C+L+R) all competed in 
 
 A winger structurally cannot win a defensive-zone faceoff. Penalizing them in a pool that includes DZ-faceoff specialists isn't measuring contested-puck contribution; it's measuring "how center-like is this player." CWD pooling makes the comparison fair: each pool contains players who can plausibly produce the same set of events.
 
-The cost is reduced pool sizes (~370 → ~180-200), which mechanically increases z-score noise. The trade-off is accepted on grounds of positional fairness. See Section 10 for full validation numbers.
+The cost is reduced pool sizes (~370 → ~180-200), which mechanically increases z-score noise. Earlier validation against pre-coordinate-fix data showed v3 YoY repeatability about 2-3 points lower than v2's. The current v3 mean is r = 0.876 across 8 consecutive-year pairs (see README §Validation); v2 has not been re-tabulated against post-fix data, so the precise gap to v2 is not currently known. The qualitative trade-off — slightly lower stability in exchange for positional fairness — stands regardless.
 
 ## 7. Computation pipeline
 
@@ -149,40 +149,21 @@ raw_takeaways_high_danger, raw_takeaways_other
 
 ## 10. Validation summary
 
-See `validation/v3_validation_summary.txt` for full numbers.
+Numbers below are regenerated programmatically from the per_60 CSVs by `build_validation_summary.py`. The full breakdown lives in `validation/v3_validation_summary.txt` (or top-level `v3_validation_summary.txt` in the public repo) and is rebuilt every time underlying data changes. See README §Validation for the per-pair tables; this section gives the rolled-up summary.
 
-**YoY repeatability (full dataset, all skaters):**
+**YoY repeatability:** v3 r = 0.876 (mean across 8 consecutive-year pairs spanning 2015-16 through 2025-26, excluding the 2020-21 COVID season). Range 0.861–0.887. Sits well above public benchmarks (Corsi/Fenwick ~0.6–0.7, Points/60 ~0.5–0.6).
 
-| Season pair | GRIT z r | Fwd points r |
-|-------------|:--------:|:------------:|
-| 15-16 to 16-17 | 0.887 | 0.794 |
-| 16-17 to 17-18 | 0.863 | 0.751 |
-| 17-18 to 18-19 | 0.882 | 0.840 |
-| 18-19 to 19-20 | 0.872 | 0.828 |
-| 19-20 to 21-22 * | 0.803 | 0.744 |
-| 21-22 to 22-23 | 0.883 | 0.813 |
-| 22-23 to 23-24 | 0.861 | 0.832 |
-| 23-24 to 24-25 | 0.878 | 0.836 |
-| 24-25 to 25-26 | 0.879 | 0.840 |
-| **Average** | **0.877** | **0.809** |
+**YoY decay across multi-season gaps:** 1-year mean r = 0.876, 2-year = 0.825, 3-year = 0.788, 4-year = 0.781. Plateaus after 2-3 years — consistent with a metric capturing stable player archetype rather than year-specific role context.
 
-* Spans the COVID bubble and 2020-21 lockout gap. Both metrics drop as expected.
+**Pool sizes under CWD (25-26):** C = 187, W = 187, D = 204. Balanced. Pool sizes hold roughly steady across the dataset (C and D both 180-210; W ranges 150-190 with some growth over time).
 
-GRIT z is more stable year-over-year than forward points across every single season pair in the dataset. The average advantage is +0.068 r. This holds for forwards in isolation as well (avg GRIT z r = 0.876 vs points r = 0.809).
+**Playoff vs RS rate inflation:** Mean composite ratio 1.34× across 9 paired seasons, range 1.27×–1.46×. Hits ~1.63× (thrown) and 1.58× (taken). Physical minors ~1.68×. Fighting ~0.48× (the most robust signature — fighting halves in playoffs every year). Crease goals ~0.87× (slightly below RS — net-front scoring is harder against playoff goaltending). The aggregate ratio is meaningfully variable year to year and should not be characterized as "stable" in the strong sense; the most recent two seasons (2024-25 and 2025-26) sit visibly higher than 2015-2019.
 
-The stability gap is meaningful: it means a player's contested-puck contribution rank relative to peers is a more persistent signal than their scoring rank. The metric captures something structural about how players play, not just what they produced in a given year.
-
-For context, public possession metrics (Corsi, Fenwick) typically show YoY r of 0.6-0.7 at the player level. Points per 60 for forwards is typically 0.5-0.6 for full samples but rises toward 0.8 when constrained to qualifying players as done here.
-
-**v3 vs v2.1 (25-26 RS):** r ≈ 0.96 on `grit_z_blend`. v3 makes meaningful but not radical changes from v2.1.
-
-**Pool sizes under CWD (25-26):** C=182, W=182, D=198. Balanced.
-
-**Playoff vs RS rate inflation:** Consistent across all nine playoff seasons in the dataset. Overall GRIT rate runs approximately 1.43-1.64× the regular season baseline. Hits inflate most (~1.84×), physical minors follow (~2.02×), fighting runs counter-intuitively lower (~0.47×) — likely because designated fighters see reduced ice time in the playoffs. Signature is stable and robust across years.
+**Per-pool YoY (24-25 → 25-26):** C r = 0.871, L r = 0.893, R r = 0.913, D r = 0.871. The wing pools cluster more tightly than centers and defense, likely because the role-type range within wings is narrower.
 
 ## 11. Honest framing
 
-**v3 is more conceptually coherent than v2 at the cost of ~2-3 points of YoY stability.** Don't claim v3 is "better validated" — by the cleanest validation criterion (YoY repeatability), v2 is better. v3 is preferred because:
+**v3 is more conceptually coherent than v2.** Earlier validation against pre-coordinate-fix data suggested v3 was about 2-3 points lower in YoY repeatability than v2; v2 has not been re-tabulated against post-fix data, so the current gap is unknown. The qualitative comparison stands: don't claim v3 is "better validated" by raw YoY r — pool-size reduction under CWD mechanically reduces stability. v3 is preferred because:
 
 1. Bug fixes (v2 had three confirmed strength-inversion bugs in the PK file)
 2. Spatial methodology coherence (v2 had the wrong shape for HD takeaways in the all-strengths file)
