@@ -85,6 +85,7 @@ POS_EVENTS = [
     ("DZ faceoff wins",  "raw_dz_faceoff_wins",       2.0),
     ("Other takeaways",  "raw_takeaways_other",       2.0),
     ("Hits taken",       "raw_hits_taken",            1.5),
+    ("Close shots",      "raw_close_shots",           1.5),   # NEW v3.1
 ]
 
 # Negative events (anti-grit table). OZ giveaways excluded — weight is 0.0 in v3.

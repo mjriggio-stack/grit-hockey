@@ -1,9 +1,25 @@
 #!/usr/bin/env python3
 """
-build_v3.py — produce v3-formatted GRIT files from PBP cache and TOI data.
+build_v3.py — produce v3.1-formatted GRIT files from PBP cache and TOI data.
 
-v3 = v2.1 baseline + weight changes + pooling change.
+v3.1 = v3 baseline + close-range shots as a 15th weighted component.
+v3   = v2.1 baseline + weight changes + pooling change.
 Builds on v2.1 (which itself fixed bugs and realigned spatial methodology).
+
+Changes from v3:
+  - Adds raw_close_shots: any shot attempt (shot-on-goal, missed-shot, or goal)
+    whose location satisfies the crease-goal shape (89-|x|)^2 + y^2 <= 144
+    (i.e. within 12 feet of the net, Euclidean). Weight: +1.5.
+  - Crease goals therefore contribute to BOTH raw_crease_goals (+10.0) AND
+    raw_close_shots (+1.5) for a combined +11.5. This is intentional: the act
+    of getting to the dangerous area earns close-shot credit; finishing it
+    earns the crease-goal credit on top. Mirrors how a hit thrown that strips
+    the puck credits both raw_hits_thrown and raw_takeaways_*.
+  - Weight chosen at +1.5 after testing +3.0 was rejected (correlation with v3
+    dropped to ~0.988; doubled credit per close-range scorer was too aggressive).
+    At +1.5, v3.1 vs v3 correlation is ~0.997 across validation seasons; the
+    persistent power-forward archetype (Tavares/JVR/Kreider/Lee/B. Tkachuk)
+    surfaces in the top-30 movers across all tested seasons.
 
 Changes from v2.1:
   Weight changes:
@@ -121,6 +137,7 @@ def write_df_to_sql(engine, df, table, season, is_playoffs, strength=None):
 
 V3_WEIGHTS = {
     "raw_crease_goals":         10.0,   # CHANGED v3: 7.5 -> 10.0 (top tier)
+    "raw_close_shots":           1.5,   # NEW v3.1: shot attempts within 12-ft crease shape (incl. crease goals)
     "raw_penalties_drawn":       5.5,
     "raw_fighting_majors":       3.5,   # CHANGED v3: 5.5 -> 3.5 (mid tier)
     "raw_physical_minors_taken": 5.5,
@@ -160,6 +177,17 @@ def is_hd_block(x, y):
 
 def is_crease_goal(x, y):
     """Crease goal = within 12-ft Euclidean of net."""
+    if x is None or y is None:
+        return False
+    return ((89 - abs(x))**2 + y**2) <= 144
+
+
+def is_close_shot(x, y):
+    """
+    Close-range shot = within 12-ft Euclidean of net.
+    Same shape as crease_goal — applied to all shot attempts (SoG, missed, goal).
+    NEW in v3.1.
+    """
     if x is None or y is None:
         return False
     return ((89 - abs(x))**2 + y**2) <= 144
@@ -347,6 +375,24 @@ def process_game(data, agg, identity, mode,
             if scorer and is_crease_goal(x, y):
                 credit(scorer, "raw_crease_goals", weight=V3_WEIGHTS["raw_crease_goals"])
                 record_spatial(scorer, "crease_goal")
+            # NEW v3.1: goals are also shot attempts. Credit close-shot if within
+            # the 12-ft shape. For a crease goal this stacks with raw_crease_goals
+            # (combined +11.5) — see module docstring.
+            if scorer and is_close_shot(x, y):
+                credit(scorer, "raw_close_shots", weight=V3_WEIGHTS["raw_close_shots"])
+
+        # NEW v3.1: shot-on-goal and missed-shot. Both use shootingPlayerId.
+        # No spatial recording — heatmap layer was decided against per the
+        # cut list in GRIT_v31_punchlist.md.
+        elif ev == "shot-on-goal":
+            shooter = d.get("shootingPlayerId")
+            if shooter and is_close_shot(x, y):
+                credit(shooter, "raw_close_shots", weight=V3_WEIGHTS["raw_close_shots"])
+
+        elif ev == "missed-shot":
+            shooter = d.get("shootingPlayerId")
+            if shooter and is_close_shot(x, y):
+                credit(shooter, "raw_close_shots", weight=V3_WEIGHTS["raw_close_shots"])
 
 
 # ============================================================================
@@ -366,6 +412,7 @@ V2_1_COLUMNS = [
     "weighted_total", "raw_grit_per_60", "grit_per_game",
     "grit_z_pos", "grit_z_vol", "grit_z_blend",
     "raw_blocked_shots", "raw_blocked_shots_hd", "raw_blocked_shots_non_hd",
+    "raw_close_shots",
     "raw_crease_goals", "raw_dz_faceoff_wins",
     "raw_fighting_majors", "raw_giveaways_dz", "raw_giveaways_nz",
     "raw_giveaways_oz", "raw_hits_taken", "raw_hits_thrown",

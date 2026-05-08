@@ -46,6 +46,18 @@ from pathlib import Path
 import pandas as pd
 
 
+# ---------------------------------------------------------------------------
+# Path anchoring. Script assumed to live at:
+#     C:\Users\mjrig\OneDrive\Documents\Grit\Version 3\source\build_dashboard.py
+# ---------------------------------------------------------------------------
+SCRIPT_DIR = Path(__file__).resolve().parent
+WORKING_DIR = SCRIPT_DIR.parent
+GRIT_DIR = WORKING_DIR.parent
+ONE_DRIVE_DOCS = GRIT_DIR.parent
+DEFAULT_DATA_DIR = WORKING_DIR / "data"
+DEFAULT_OUTPUT_DIR = ONE_DRIVE_DOCS / "GitHub" / "grit-hockey" / "viz"
+
+
 # ============================================================================
 # Columns embedded into the HTML. Anything the leaderboard, scatter, meta row,
 # or Export-CSV button needs must be in this list. Raw event columns are
@@ -59,6 +71,7 @@ EMBED_COLS = [
     "raw_grit_per_60", "grit_per_game",
     "grit_z_pos", "grit_z_vol", "grit_z_blend",
     "raw_blocked_shots", "raw_blocked_shots_hd", "raw_blocked_shots_non_hd",
+    "raw_close_shots",                                # NEW v3.1
     "raw_crease_goals", "raw_dz_faceoff_wins", "raw_fighting_majors",
     "raw_giveaways_dz", "raw_giveaways_nz", "raw_giveaways_oz",
     "raw_hits_taken", "raw_hits_thrown",
@@ -784,15 +797,20 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--season", required=True,
                         help="Season tag, e.g. 2026 or 2026_playoffs")
-    parser.add_argument("--data-dir", required=True, type=Path,
-                        help="Root data directory (will look in data-dir/{season}/ first, then data-dir/)")
-    parser.add_argument("--output-dir", required=True, type=Path,
-                        help="Where to write grit_dashboard_v3_{season}.html")
+    parser.add_argument("--data-dir", type=Path, default=DEFAULT_DATA_DIR,
+                        help=f"Root data directory (default: {DEFAULT_DATA_DIR})")
+    parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR,
+                        help=f"Where to write grit_dashboard_v3_{{season}}.html (default: {DEFAULT_OUTPUT_DIR})")
     args = parser.parse_args()
 
     data_dir = args.data_dir
     output_dir = args.output_dir
     season = args.season
+
+    print(f"Season:     {season}")
+    print(f"Data dir:   {data_dir}")
+    print(f"Output dir: {output_dir}")
+    print()
 
     if not data_dir.exists():
         print(f"ERROR: --data-dir does not exist: {data_dir}", file=sys.stderr)
