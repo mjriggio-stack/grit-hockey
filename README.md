@@ -190,12 +190,12 @@ You'll need:
 # Stage 1: scrape one season
 python scrape_v3.py `
     --season 2026 `
-    --output-dir "C:\Users\mjrig\OneDrive\Documents\Grit\cache\2026"
+    --output-dir "C:\Users\mjrig\OneDrive\Documents\Grit\Version 3\cache\2026"
 
 # Stage 2: build CSVs + load SQL
 python build_v3.py `
-    --pbp-cache "C:\Users\mjrig\OneDrive\Documents\Grit\cache\2026\pbp" `
-    --toi       "C:\Users\mjrig\OneDrive\Documents\Grit\cache\2026\toi_2026.csv" `
+    --pbp-cache "C:\Users\mjrig\OneDrive\Documents\Grit\Version 3\cache\2026\pbp" `
+    --toi       "C:\Users\mjrig\OneDrive\Documents\Grit\Version 3\cache\2026\toi_2026.csv" `
     --output-dir "C:\Users\mjrig\OneDrive\Documents\Grit\Version 3\data\2026" `
     --season-tag 2026
 
