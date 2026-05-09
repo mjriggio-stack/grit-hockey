@@ -1,10 +1,10 @@
-# GRIT v3 — Methodology Specification
+# GRIT v3.1 — Methodology Specification
 
-This document specifies GRIT v3 in full. v3 builds on v2.1 (which itself fixed bugs and realigned spatial methodology in v2). See `v3_deliverable/methodology/` reference and v2.1 deliverable for the full lineage.
+This document specifies GRIT v3.1 in full. v3.1 builds on v3, which itself built on v2.1 (which fixed bugs and realigned spatial methodology in v2). See `v3_deliverable/methodology/` reference and v2.1 deliverable for the full lineage.
 
 ## 0. What GRIT measures (and what it doesn't)
 
-GRIT measures **contested-puck contribution**. It's a positionally-agnostic, archetype-agnostic count of the events that happen when a player is competing for or against a puck in a contested area: hits thrown and taken, blocked shots, takeaways and giveaways, defensive-zone faceoff wins, penalties drawn, physical minors, fights, and crease-area goals.
+GRIT measures **contested-puck contribution**. It's a positionally-agnostic, archetype-agnostic count of the events that happen when a player is competing for or against a puck in a contested area: hits thrown and taken, blocked shots, takeaways and giveaways, defensive-zone faceoff wins, penalties drawn, physical minors, fights, crease-area goals, and (new in v3.1) close-range shot attempts.
 
 Critically, GRIT is **not** a measure of toughness, body size, role designation, or "grinding." Those concepts are how mainstream hockey commentary describes some of the players who tend to score well on GRIT, but they are descriptions of *archetype*, not of what the metric actually counts.
 
@@ -18,34 +18,35 @@ Three concrete cases from the 25-26 leaderboard worth keeping in mind:
 - **Vincent Trocheck** (NYR) — skilled 2C and 60+ point scorer, top-15 among NHL centers. His reputation as a finesse player undersells the physical engagement his event count reveals (193 hits, 18 penalties drawn).
 - **Ryan Hartman** (MIN) — top-line agitator/scorer with low hit volume but 15 crease goals and 29 penalties drawn. Top-25 among NHL wings despite throwing fewer hits than essentially everyone else on that list. His contested-puck contribution comes from net-front scoring and penalty-drawing, not physical engagement.
 
-If a reader's intuition says "Hartman shouldn't be on a grit list, he's not a grinder" — that's the reader applying an archetype filter the metric doesn't apply. v3 is identifying contested-puck contribution honestly. The metric and the archetype are different things, and that's a feature: it means GRIT can pick up a Krebs or a Trocheck or a Hartman when the archetype filter would miss them.
+If a reader's intuition says "Hartman shouldn't be on a grit list, he's not a grinder" — that's the reader applying an archetype filter the metric doesn't apply. v3.1 is identifying contested-puck contribution honestly. The metric and the archetype are different things, and that's a feature: it means GRIT can pick up a Krebs or a Trocheck or a Hartman when the archetype filter would miss them.
 
 ### Implication for naming and presentation
 
-The acronym "GRIT" (Gritty Role Impact Total) is itself slightly misleading because it primes readers to expect a toughness metric. The honest product is a contested-puck contribution metric. Anywhere v3 outputs are presented publicly — podcasts, dashboards, written analysis — the framing should be "contested-puck contribution" first, not "grit." This is especially important when explaining unintuitive results.
+The acronym "GRIT" (Gritty Role Impact Total) is itself slightly misleading because it primes readers to expect a toughness metric. The honest product is a contested-puck contribution metric. Anywhere v3.1 outputs are presented publicly — podcasts, dashboards, written analysis — the framing should be "contested-puck contribution" first, not "grit." This is especially important when explaining unintuitive results.
 
 ## 1. Weights
 
-| Event | v2 | v2.1 | v3 |
+| Event | v2.1 | v3 | v3.1 |
 |---|---:|---:|---:|
-| Crease-area goals | +7.5 | +7.5 | **+10.0** |
+| Crease-area goals | +7.5 | +10.0 | +10.0 |
 | Penalties drawn | +5.5 | +5.5 | +5.5 |
-| Fighting majors | +5.5 | +5.5 | **+3.5** |
+| Fighting majors | +5.5 | +3.5 | +3.5 |
 | Physical minors taken | +5.5 | +5.5 | +5.5 |
 | HD takeaways | +3.5 | +3.5 | +3.5 |
-| HD blocks | (combined +3.0) | +4.0 | +4.0 |
-| Non-HD blocks | (combined +3.0) | +3.0 | +3.0 |
-| Hits thrown | +2.5 | +2.5 | **+3.0** |
+| HD blocks | +4.0 | +4.0 | +4.0 |
+| Non-HD blocks | +3.0 | +3.0 | +3.0 |
+| Hits thrown | +2.5 | +3.0 | +3.0 |
 | DZ faceoff wins | +2.0 | +2.0 | +2.0 |
 | Other takeaways | +2.0 | +2.0 | +2.0 |
+| **Close-range shots** | — | — | **+1.5** |
 | Hits taken | +1.5 | +1.5 | +1.5 |
-| OZ giveaways | −1.0 | −1.0 | **0.0** |
+| OZ giveaways | −1.0 | 0.0 | 0.0 |
 | NZ giveaways | −1.5 | −1.5 | −1.5 |
 | DZ giveaways | −2.5 | −2.5 | −2.5 |
 
-### v3 weight change rationale
+### v3 weight change rationale (unchanged in v3.1)
 
-**Crease goals 7.5 → 10.0:** Top-tier weight. Players who score from the doorstep — tipping rebounds, jamming pucks past the goalie, going to the net through traffic — embody the GRIT thesis. v3 elevates this to the highest-leverage scoring activity.
+**Crease goals 7.5 → 10.0:** Top-tier weight. Players who score from the doorstep — tipping rebounds, jamming pucks past the goalie, going to the net through traffic — embody the GRIT thesis. v3 elevated this to the highest-leverage scoring activity.
 
 **Fighting 5.5 → 3.5:** Mid-tier. The methodology document's §7.7 (regression robustness check) showed that fighting has unusually high individual stability year-over-year, which means regression-derived weights inflated it (~3× the design weight). Bringing fighting down to 3.5 prevents v3 from over-rewarding designated fighters who occupy a niche role on a small subset of teams.
 
@@ -53,9 +54,23 @@ The acronym "GRIT" (Gritty Role Impact Total) is itself slightly misleading beca
 
 **OZ giveaways −1.0 → 0.0:** Offensive-zone giveaways aren't comparable to DZ or NZ giveaways. They often reflect attempting a play in a dangerous area — the same thing GRIT rewards on the positive side via crease goals and HD takeaways. Penalizing them creates an internal contradiction (rewarding the attempt and punishing the failure of the same activity). NZ and DZ giveaways remain weighted negatively because puck-management failures in those zones genuinely cost teams.
 
-## 2. Spatial definitions (inherited from v2.1)
+### v3.1 weight change rationale
+
+**Close-range shots: new event at +1.5.** Any shot attempt (shot-on-goal, missed-shot, or goal) whose location satisfies the same 12-ft Euclidean test used for crease goals: `(89 − |x|)² + y² ≤ 144`.
+
+The case for inclusion: the GRIT thesis rewards willingness to enter dangerous areas. A defender who blocks a shot gets credit regardless of whether the shot would have gone in; by the same logic, a forward who crashes the net and gets a shot off deserves credit regardless of whether it goes in. v3 only credited the make (crease goal at +10.0); v3.1 also credits the attempt (close shot at +1.5).
+
+The two events stack by design. A crease goal earns both the +10.0 finishing credit and the +1.5 attempt credit, for a combined +11.5. This is intentional, not double-counting in a problematic sense — close-shots and crease-goals are conceptually different events (effort/exposure vs finishing in dangerous areas), and a player who does both is contributing on both axes.
+
+The case for +1.5 specifically: a +3.0 weight was tested first and rejected. At +3.0, v3.1 ↔ v3 correlation dropped to ~0.988 across validation seasons, and the metric tilted too aggressively toward close-range scorers — doubling credit for a play type that already gets weighted highly via crease goals. At +1.5, correlation with v3 holds at ~0.997 across all 3 validation seasons (2018-19, 2023-24, 2025-26), the persistent power-forward archetype (Tavares, JVR, Kreider, Lee, B. Tkachuk) cleanly surfaces in top-30 movers in every validation season, and the existing v3 leaderboard structure stays intact.
+
+The component is empirically separate from hits thrown despite both being labeled "physical engagement events" by some readers. Close-shots vs hits-thrown correlation is only r ≈ +0.12 across the dataset — they capture different player behaviors. The decision to include close-shots was made on theoretical grounds (the "willingness to enter dangerous places" argument), not on empirical clustering.
+
+## 2. Spatial definitions (inherited from v2.1, extended in v3.1)
 
 **Crease-area goals:** A goal qualifies if its location satisfies `(89 − |x|)² + y² ≤ 144` (within 12 feet of the net, Euclidean). This is a circle around the goalmouth — captures going-to-the-net scoring, excludes wraparounds and bad-angle goals from below the goal line.
+
+**Close-range shots (new in v3.1):** Same 12-ft Euclidean test as crease goals. Any shot-on-goal, missed-shot, or goal whose location is within 12 feet of the net qualifies. Goals are counted in BOTH `raw_crease_goals` and `raw_close_shots` by design (see §1 v3.1 rationale).
 
 **HD takeaway zone:** A takeaway qualifies as high-danger if `|x| ≥ 70` AND `|y| ≤ 18`. This is the slot rectangle (~19 ft deep, 36 ft wide). Captures both goalmouth strips AND high-slot takeaways during a setup.
 
@@ -82,7 +97,7 @@ Slashing, high-sticking, tripping, hooking, holding are NOT included — these a
 
 ## 5. Bug fixes from v2 (inherited from v2.1)
 
-Three columns in v2's `grit_pk.csv` had inverted strength state — they counted events while the player was on the **power play** instead of the penalty kill. v3 corrects all three:
+Three columns in v2's `grit_pk.csv` had inverted strength state — they counted events while the player was on the **power play** instead of the penalty kill. v3 corrected all three:
 
 - `raw_blocked_shots` — was counting PP blocks; now correctly counts PK blocks
 - `raw_hits_taken` — was counting PP hits taken; now correctly counts PK hits taken
@@ -90,9 +105,9 @@ Three columns in v2's `grit_pk.csv` had inverted strength state — they counted
 
 The pattern: v2 inverted strength state for "recipient" events (player as blocker, hit recipient, penalty drawer) while correctly classifying "actor" events (player as hitter, takeaway taker, faceoff winner, giveaway committer, scorer). Likely cause was separate join logic between actor and recipient event roles.
 
-## 6. Pooling — CHANGED in v3
+## 6. Pooling (CHANGED in v3, unchanged in v3.1)
 
-**v3 uses C/W/D pooling.** Z-scores are computed within each pool:
+**v3.1 uses C/W/D pooling.** Z-scores are computed within each pool:
 
 - **C** (centers): position code `C`
 - **W** (wings): position code `L` or `R`
@@ -104,13 +119,13 @@ This replaces v2 and v2.1's F/D pooling, where forwards (C+L+R) all competed in 
 
 A winger structurally cannot win a defensive-zone faceoff. Penalizing them in a pool that includes DZ-faceoff specialists isn't measuring contested-puck contribution; it's measuring "how center-like is this player." CWD pooling makes the comparison fair: each pool contains players who can plausibly produce the same set of events.
 
-The cost is reduced pool sizes (~370 → ~180-200), which mechanically increases z-score noise. Earlier validation against pre-coordinate-fix data showed v3 YoY repeatability about 2-3 points lower than v2's. The current v3 mean is r = 0.876 across 8 consecutive-year pairs (see README §Validation); v2 has not been re-tabulated against post-fix data, so the precise gap to v2 is not currently known. The qualitative trade-off — slightly lower stability in exchange for positional fairness — stands regardless.
+The cost is reduced pool sizes (~370 → ~180-200), which mechanically increases z-score noise. Earlier validation against pre-coordinate-fix data showed v3 YoY repeatability about 2-3 points lower than v2's. The current v3.1 mean is r = 0.873 across 8 consecutive-year pairs (see README §Validation); v2 has not been re-tabulated against post-fix data, so the precise gap to v2 is not currently known. The qualitative trade-off — slightly lower stability in exchange for positional fairness — stands regardless.
 
 ## 7. Computation pipeline
 
-Same as v2.1:
+Same as v2.1 with one component added:
 
-1. **Weighted aggregation:** sum `count_event × weight_event` across the 14 weighted components (15 with block subdivision counted separately, but `raw_blocked_shots` is the sum and is not separately weighted).
+1. **Weighted aggregation:** sum `count_event × weight_event` across the 15 weighted components in v3.1 (16 with block subdivision counted separately, but `raw_blocked_shots` is the sum and is not separately weighted). v3 had 14; v3.1 adds `raw_close_shots`.
 2. **Rate normalization:** `weighted_total ÷ toi_min × 60` for per-60 rate.
 3. **Volume normalization:** `weighted_total ÷ games_played` for per-game volume.
 4. **C/W/D pool z-scoring:** within each pool, compute z-score on rate (`grit_z_pos`) and volume (`grit_z_vol`) separately.
@@ -131,14 +146,14 @@ Same as v2.1:
 
 ## 9. Output column structure
 
-Same as v2.1, with no schema changes:
+v3.1 adds `raw_close_shots` to the column list. All other columns unchanged from v3:
 
 ```
 player_id, name, position, team, games_played, toi_min,
 weighted_total, raw_grit_per_60, grit_per_game,
 grit_z_pos, grit_z_vol, grit_z_blend,
 raw_blocked_shots, raw_blocked_shots_hd, raw_blocked_shots_non_hd,
-raw_crease_goals, raw_dz_faceoff_wins,
+raw_close_shots, raw_crease_goals, raw_dz_faceoff_wins,
 raw_fighting_majors, raw_giveaways_dz, raw_giveaways_nz,
 raw_giveaways_oz, raw_hits_taken, raw_hits_thrown,
 raw_penalties_drawn, raw_physical_minors_taken,
@@ -149,34 +164,80 @@ raw_takeaways_high_danger, raw_takeaways_other
 
 ## 10. Validation summary
 
-Numbers below are regenerated programmatically from the per_60 CSVs by `build_validation_summary.py`. The full breakdown lives in `validation/v3_validation_summary.txt` (or top-level `v3_validation_summary.txt` in the public repo) and is rebuilt every time underlying data changes. See README §Validation for the per-pair tables; this section gives the rolled-up summary.
+Numbers below are regenerated programmatically from the per_60 CSVs by `build_validation_summary.py`. The full breakdown lives in `v3_validation_summary.txt` at the repo root and is rebuilt every time underlying data changes. See README §Validation for the per-pair tables; this section gives the rolled-up summary.
 
-**YoY repeatability:** v3 r = 0.876 (mean across 8 consecutive-year pairs spanning 2015-16 through 2025-26, excluding the 2020-21 COVID season). Range 0.861–0.887. Sits well above public benchmarks (Corsi/Fenwick ~0.6–0.7, Points/60 ~0.5–0.6).
+**YoY repeatability:** v3.1 mean r = 0.873 across 8 consecutive-year pairs spanning 2015-16 through 2025-26 (excluding the 2020-21 COVID season). Range 0.858–0.885. Sits well above public benchmarks (Corsi/Fenwick ~0.6–0.7, Points/60 ~0.5–0.6). v3 was 0.876 across the same pairs; the 0.003 drop from adding the close-shot component is within consecutive-pair variance.
 
-**YoY decay across multi-season gaps:** 1-year mean r = 0.876, 2-year = 0.825, 3-year = 0.788, 4-year = 0.781. Plateaus after 2-3 years — consistent with a metric capturing stable player archetype rather than year-specific role context.
+**YoY decay across multi-season gaps:** 1-year mean r = 0.873, 2-year = 0.821, 3-year = 0.783, 4-year = 0.777. Plateaus after 2-3 years — consistent with a metric capturing stable player archetype rather than year-specific role context.
 
 **Pool sizes under CWD (25-26):** C = 187, W = 187, D = 204. Balanced. Pool sizes hold roughly steady across the dataset (C and D both 180-210; W ranges 150-190 with some growth over time).
 
-**Playoff vs RS rate inflation:** Mean composite ratio 1.34× across 9 paired seasons, range 1.27×–1.46×. Hits ~1.63× (thrown) and 1.58× (taken). Physical minors ~1.68×. Fighting ~0.48× (the most robust signature — fighting halves in playoffs every year). Crease goals ~0.87× (slightly below RS — net-front scoring is harder against playoff goaltending). The aggregate ratio is meaningfully variable year to year and should not be characterized as "stable" in the strong sense; the most recent two seasons (2024-25 and 2025-26) sit visibly higher than 2015-2019.
+**Playoff vs RS rate inflation:** Mean composite ratio 1.32× across 9 paired seasons, range 1.26×–1.43×. Hits ~1.63× (thrown) and 1.58× (taken). Physical minors ~1.67×. Fighting ~0.48× (the most robust signature — fighting halves in playoffs every year). Crease goals ~0.86× (slightly below RS — net-front scoring is harder against playoff goaltending). Close-range shot attempts ~0.96× (also below RS — getting clean looks from the dangerous area is harder against playoff defending, even before the finishing question). The aggregate ratio is meaningfully variable year to year and should not be characterized as "stable" in the strong sense; the most recent two seasons (2024-25 and 2025-26) sit visibly higher than 2015-2019.
 
-**Per-pool YoY (24-25 → 25-26):** C r = 0.871, L r = 0.893, R r = 0.913, D r = 0.871. The wing pools cluster more tightly than centers and defense, likely because the role-type range within wings is narrower.
+**Per-pool YoY (24-25 → 25-26):** C r = 0.865, L r = 0.890, R r = 0.909, D r = 0.867. The wing pools cluster more tightly than centers and defense, likely because the role-type range within wings is narrower.
 
 ## 11. Honest framing
 
-**v3 is more conceptually coherent than v2.** Earlier validation against pre-coordinate-fix data suggested v3 was about 2-3 points lower in YoY repeatability than v2; v2 has not been re-tabulated against post-fix data, so the current gap is unknown. The qualitative comparison stands: don't claim v3 is "better validated" by raw YoY r — pool-size reduction under CWD mechanically reduces stability. v3 is preferred because:
+**v3.1 is a refinement of v3, not a replacement.** Adding the close-shot component preserves v3's structure (same pooling, same other weights, same spatial definitions, same TOI floors) and adds one component that captures a behavior the v3 metric was missing. v3.1 ↔ v3 correlation is ~0.997, meaning the rank order is essentially preserved. v3.1 is preferred over v3 because:
 
-1. Bug fixes (v2 had three confirmed strength-inversion bugs in the PK file)
-2. Spatial methodology coherence (v2 had the wrong shape for HD takeaways in the all-strengths file)
-3. Positional fairness in the comparison pool (v2's F pool penalized wingers for not being centers)
-4. Defensible weight choices (v3 reflects considered design decisions; v2's weights were initial drafts)
+1. The close-shot component directly captures the "willingness to enter dangerous areas" half of the GRIT thesis that v3 only captured for finished goals.
+2. The persistent power-forward archetype (Tavares, JVR, Kreider, Lee, B. Tkachuk) properly surfaces in v3.1 where it was understated in v3.
+3. No regressions: YoY stability is within noise of v3 (0.873 vs 0.876), playoff inflation is within noise (1.32× vs 1.34×), and the pooling/weight changes that made v3 conceptually coherent are preserved.
 
-The trade is conceptual integrity for raw stability. The metric remains strongly repeatable in absolute terms.
+The trade for v3.1 over v3 is genuinely small. For users who want the v3 numbers exactly, they remain available in tagged commits.
 
-## 12. What v3 does NOT include
+The v3 → v2 comparison stands: v3 is more conceptually coherent than v2, with bug fixes, spatial methodology coherence, positional fairness, and defensible weight choices. Earlier validation against pre-coordinate-fix data suggested v3 was about 2-3 points lower in YoY repeatability than v2; v2 has not been re-tabulated against post-fix data, so the current gap is unknown.
+
+## 12. What v3.1 does NOT include
 
 The following are intentionally out of scope:
 
-- **TOI floor adjustments.** Low-TOI rate noise on PK is a known issue; v3 keeps v2's 30-min floor for backward consistency.
-- **Component-level z-scoring before weighting.** v3 weights raw counts directly. An alternative approach (z-score each component within pool first, then sum the z-scores) would change the metric's behavior; not adopted in v3.
-- **Position deployment context.** A center playing 22 minutes vs a center playing 12 minutes are compared at the rate level (per-60). The 0.3-volume blend partially addresses this; full deployment-controlling normalization is not v3 scope.
-- **Multi-season aggregates.** v3 produces single-season files. Career or multi-season GRIT is computed downstream by the consumer.
+- **TOI floor adjustments.** Low-TOI rate noise on PK is a known issue; v3.1 keeps v2's 30-min floor for backward consistency.
+- **Component-level z-scoring before weighting.** v3.1 weights raw counts directly. An alternative approach (z-score each component within pool first, then sum the z-scores) would change the metric's behavior; not adopted.
+- **Position deployment context.** A center playing 22 minutes vs a center playing 12 minutes are compared at the rate level (per-60). The 0.3-volume blend partially addresses this; full deployment-controlling normalization is not v3.1 scope.
+- **Multi-season aggregates.** v3.1 produces single-season files. Career or multi-season GRIT is computed downstream by the consumer.
+- **Naming consistency between `raw_close_shots` and `raw_crease_goals`.** Both events use the identical 12-ft Euclidean spatial test, but they carry different prefixes (`close_` vs `crease_`). This is a cosmetic inconsistency that will be cleaned up in v4 (likely by renaming `raw_close_shots` to `raw_crease_shots`). Backward-compatible aliases in the CSV columns and SQL schema are preserved in v3.1 to avoid breaking downstream consumers.
+
+## 13. Changes from v3
+
+A summary of what changed and what didn't, for users moving from v3 to v3.1.
+
+### What's new
+
+**One component added:** `raw_close_shots` at +1.5 weight. See §1 (v3.1 rationale), §2 (spatial definition), and §10 (validation impact) for full detail.
+
+### What stayed the same
+
+Everything else. v3.1 inherits unchanged:
+
+- All v3 weight choices (crease goals 10.0, fighting 3.5, hits thrown 3.0, OZ giveaways 0.0)
+- C/W/D pooling
+- HD spatial definitions (12-ft circle for crease goals, slot rectangle for HD takeaways AND HD blocks)
+- Block subdivision (HD blocks +4.0, non-HD blocks +3.0)
+- Physical minor list (six penalty types)
+- PK strength filter (generous SH)
+- 0.7 rate / 0.3 volume blend ratio
+- TOI floors (RS 600/400/30; playoffs 25/15/5)
+- Output column structure (one column added; nothing removed or renamed)
+
+### What v3.1 ↔ v3 correlation looks like
+
+Across the 3 validation seasons (2018-19 RS, 2023-24 RS, 2025-26 RS), v3.1 grit_z_blend correlates with v3 grit_z_blend at r ≈ 0.997. The metric reorders some players — the "movers" are heavily concentrated in the power-forward archetype that gets close-shot credit it didn't have under v3 — but the leaderboard structure is preserved.
+
+### What weight was rejected
+
+A +3.0 weight for close-range shots was tested before settling on +1.5. At +3.0, v3.1 ↔ v3 correlation dropped to ~0.988, and the metric tilted aggressively toward close-range scorers. The +1.5 weight was chosen as the lightest weight at which the close-shot component meaningfully surfaces the missing power-forward archetype while keeping v3.1 structurally aligned with v3.
+
+### Which other components were considered for v3.1
+
+Three AllThreeZones tracked-data items were evaluated and deferred:
+
+- **DZ Puck Retrievals** — viable for v3.2, requires AllThreeZones data ingestion path
+- **Forecheck Recoveries** — viable for v3.2, same data path
+- **Exit Disruptions** — viable for v3.2, same data path
+
+Three were considered and ruled out:
+
+- **Forecheck Offense** — off-thesis (offensive zone success isn't the same as contested-puck contribution)
+- **Botched Retrievals** — high double-count risk with existing DZ giveaways
+- **Passing data** — too noisy at the granularity needed for GRIT pooling
