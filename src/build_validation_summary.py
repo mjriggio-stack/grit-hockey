@@ -41,6 +41,21 @@ from pathlib import Path
 import pandas as pd
 
 
+# ---------------------------------------------------------------------------
+# Path anchoring. Script assumed to live at:
+#     C:\Users\mjrig\OneDrive\Documents\Grit\Version 3\source\build_validation_summary.py
+# DEFAULT_DATA_DIR   = Version 3\data\
+# DEFAULT_OUTPUT_DIR = grit-hockey repo root
+# Override with CLI args if your layout is different.
+# ---------------------------------------------------------------------------
+SCRIPT_DIR = Path(__file__).resolve().parent
+WORKING_DIR = SCRIPT_DIR.parent                                       # Version 3\
+GRIT_DIR = WORKING_DIR.parent                                         # Grit\
+ONE_DRIVE_DOCS = GRIT_DIR.parent                                      # Documents\
+DEFAULT_DATA_DIR = WORKING_DIR / "data"
+DEFAULT_OUTPUT_DIR = ONE_DRIVE_DOCS / "GitHub" / "grit-hockey"
+
+
 DEFAULT_SEASONS = [2016, 2017, 2018, 2019, 2020, 2022, 2023, 2024, 2025, 2026]
 COVID_GAP_YEAR = 2021  # missing season tag — bridges with both s<=2020 and s>=2022
 
@@ -91,7 +106,7 @@ def section_yoy(dfs: dict[int, pd.DataFrame]) -> str:
     out.append("1. YEAR-OVER-YEAR REPEATABILITY (regular season, grit_z_blend)")
     out.append("=" * 80)
     out.append("")
-    out.append(f'{"Pair":<20}{"n":>8}{"v3 r":>10}')
+    out.append(f'{"Pair":<20}{"n":>8}{"v3.1 r":>10}')
     out.append("-" * 40)
 
     seasons = sorted(dfs.keys())
@@ -231,7 +246,8 @@ def section_playoff_inflation(rs_dfs: dict[int, pd.DataFrame],
         "raw_blocked_shots", "raw_blocked_shots_hd",
         "raw_takeaways_high_danger", "raw_takeaways_other",
         "raw_dz_faceoff_wins",
-        "raw_crease_goals", "raw_penalties_drawn",
+        "raw_crease_goals", "raw_close_shots",
+        "raw_penalties_drawn",
         "raw_physical_minors_taken", "raw_fighting_majors",
         "raw_giveaways_dz", "raw_giveaways_nz", "raw_giveaways_oz",
     ]
@@ -326,7 +342,7 @@ def build_summary(rs_dfs: dict[int, pd.DataFrame],
 
     sections = []
     sections.append("=" * 80)
-    sections.append("V3 VALIDATION SUMMARY")
+    sections.append("V3.1 VALIDATION SUMMARY")
     sections.append("=" * 80)
     sections.append("")
     sections.append(f"Generated:        {today}")
@@ -352,10 +368,16 @@ def main():
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument("--data-dir", required=True, type=Path)
-    parser.add_argument("--output-dir", required=True, type=Path)
+    parser.add_argument("--data-dir", type=Path, default=DEFAULT_DATA_DIR,
+                        help=f"Data dir (default: {DEFAULT_DATA_DIR})")
+    parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR,
+                        help=f"Output dir (default: {DEFAULT_OUTPUT_DIR})")
     parser.add_argument("--seasons", nargs="*", type=int, default=None)
     args = parser.parse_args()
+
+    print(f"Data dir:   {args.data_dir}")
+    print(f"Output dir: {args.output_dir}")
+    print()
 
     if not args.data_dir.exists():
         print(f"ERROR: --data-dir does not exist: {args.data_dir}", file=sys.stderr)

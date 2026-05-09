@@ -51,6 +51,18 @@ from pathlib import Path
 import pandas as pd
 
 
+# ---------------------------------------------------------------------------
+# Path anchoring. Script assumed to live at:
+#     C:\Users\mjrig\OneDrive\Documents\Grit\Version 3\source\build_playoff_delta.py
+# ---------------------------------------------------------------------------
+SCRIPT_DIR = Path(__file__).resolve().parent
+WORKING_DIR = SCRIPT_DIR.parent
+GRIT_DIR = WORKING_DIR.parent
+ONE_DRIVE_DOCS = GRIT_DIR.parent
+DEFAULT_DATA_DIR = WORKING_DIR / "data"
+DEFAULT_OUTPUT_DIR = ONE_DRIVE_DOCS / "GitHub" / "grit-hockey"
+
+
 DEFAULT_SEASONS = [2016, 2017, 2018, 2019, 2022, 2023, 2024, 2025, 2026]
 MIN_PO_GP = 3  # matches the per_60 qualification floor
 
@@ -211,7 +223,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>GRIT v3 · Playoff Rate Inflation</title>
+<title>GRIT v3.1 · Playoff Rate Inflation</title>
 <style>
   :root {
     --bg: #0d1117;
@@ -339,7 +351,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 
 <div class="header">
   <div>
-    <h1>GRIT <span class="v3badge">v3</span> <span class="sub" id="season-sub">Playoff Rate Inflation</span></h1>
+    <h1>GRIT <span class="v3badge">v3.1</span> <span class="sub" id="season-sub">Playoff Rate Inflation</span></h1>
     <div class="lede">
       Inflation = playoff Grit/60 ÷ regular-season Grit/60. <strong>1.50</strong>
       means the player produced GRIT events at 1.5× their regular-season rate
@@ -733,13 +745,17 @@ def main():
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument("--data-dir", required=True, type=Path,
-                        help="Root data dir (looks in data-dir/{season}/ first, then data-dir/)")
-    parser.add_argument("--output-dir", required=True, type=Path,
-                        help="Where to write grit_playoff_delta.html")
+    parser.add_argument("--data-dir", type=Path, default=DEFAULT_DATA_DIR,
+                        help=f"Root data dir (default: {DEFAULT_DATA_DIR})")
+    parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR,
+                        help=f"Where to write grit_playoff_delta.html (default: {DEFAULT_OUTPUT_DIR})")
     parser.add_argument("--seasons", nargs="*", type=int, default=None,
                         help="Season tags to include (default: auto-discover from DEFAULT_SEASONS)")
     args = parser.parse_args()
+
+    print(f"Data dir:   {args.data_dir}")
+    print(f"Output dir: {args.output_dir}")
+    print()
 
     if not args.data_dir.exists():
         print(f"ERROR: --data-dir does not exist: {args.data_dir}", file=sys.stderr)

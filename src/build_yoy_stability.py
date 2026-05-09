@@ -47,6 +47,20 @@ from pathlib import Path
 import pandas as pd
 
 
+# ---------------------------------------------------------------------------
+# Path anchoring. Script assumed to live at:
+#     C:\Users\mjrig\OneDrive\Documents\Grit\Version 3\source\build_yoy_stability.py
+# DEFAULT_DATA_DIR   = Version 3\data\
+# DEFAULT_OUTPUT_DIR = grit-hockey repo root (for validation HTMLs)
+# ---------------------------------------------------------------------------
+SCRIPT_DIR = Path(__file__).resolve().parent
+WORKING_DIR = SCRIPT_DIR.parent
+GRIT_DIR = WORKING_DIR.parent
+ONE_DRIVE_DOCS = GRIT_DIR.parent
+DEFAULT_DATA_DIR = WORKING_DIR / "data"
+DEFAULT_OUTPUT_DIR = ONE_DRIVE_DOCS / "GitHub" / "grit-hockey"
+
+
 # Default season set — matches what build_v3.py has produced.
 # 2021 (= 2020-21 COVID bubble) intentionally absent; 2020-21 was the
 # shortened-format season excluded from the project.
@@ -155,7 +169,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>GRIT v3 · Year-Over-Year Stability</title>
+<title>GRIT v3.1 · Year-Over-Year Stability</title>
 <style>
   :root {
     --bg: #0d1117;
@@ -302,7 +316,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 <body>
 
 <div class="header">
-  <h1>GRIT <span class="v3badge">v3</span> <span class="sub">Year-Over-Year Stability</span></h1>
+  <h1>GRIT <span class="v3badge">v3.1</span> <span class="sub">Year-Over-Year Stability</span></h1>
   <div class="lede">
     Correlation of player <code>grit_z_blend</code> across season pairs. Each
     valid pair takes the players who appeared in both seasons and computes the
@@ -666,13 +680,17 @@ def main():
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument("--data-dir", required=True, type=Path,
-                        help="Root data dir (looks in data-dir/{season}/ first, then data-dir/)")
-    parser.add_argument("--output-dir", required=True, type=Path,
-                        help="Where to write grit_yoy_stability.html")
+    parser.add_argument("--data-dir", type=Path, default=DEFAULT_DATA_DIR,
+                        help=f"Root data dir (default: {DEFAULT_DATA_DIR})")
+    parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR,
+                        help=f"Where to write grit_yoy_stability.html (default: {DEFAULT_OUTPUT_DIR})")
     parser.add_argument("--seasons", nargs="*", type=int, default=None,
                         help="Season tags to include (default: auto-discover from DEFAULT_SEASONS)")
     args = parser.parse_args()
+
+    print(f"Data dir:   {args.data_dir}")
+    print(f"Output dir: {args.output_dir}")
+    print()
 
     if not args.data_dir.exists():
         print(f"ERROR: --data-dir does not exist: {args.data_dir}", file=sys.stderr)
