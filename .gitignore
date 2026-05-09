@@ -1,6 +1,15 @@
-
 # JetBrains IDE config
 .idea/
 
-# JetBrains IDE config
-.idea/
+# Derived data — built from PBP cache via build_v3.py.
+# Single source of truth lives in working dir (Version 3/data/).
+data/
+*.csv
+
+# Python
+__pycache__/
+*.pyc
+
+# OS cruft
+.DS_Store
+Thumbs.db
