@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>GRIT v3 — Contested-Puck Contribution for the NHL</title>
-<meta name="description" content="GRIT (Gritty Role Impact Total) is a position-adjusted, weighted composite measuring per-player physical and contested-puck contribution across 10 NHL seasons." />
+<title>GRIT v3.1 — Contested-Puck Contribution for the NHL</title>
+<meta name="description" content="GRIT (Gritty Role Impact Total) is a position-adjusted, weighted composite measuring per-player physical and contested-puck contribution across 10 NHL seasons. v3.1 adds close-range shots as a 15th weighted component." />
 <style>
   :root {
     --bg: #0d1117;
@@ -135,19 +135,22 @@
 <div class="container">
 
 <div class="hero">
-  <h1>GRIT <span class="v3badge">v3</span></h1>
+  <h1>GRIT <span class="v3badge">v3.1</span></h1>
   <div class="tagline">Contested-Puck Contribution for the NHL · 2015-16 through 2025-26</div>
   <div class="lede">
     GRIT is a position-adjusted, weighted composite that measures how much a player
     contributes to <strong>contested-puck situations</strong> — hits, blocks, takeaways,
-    physical penalties, defensive-zone faceoff wins, crease goals, and more. The metric
-    is not a "toughness stat." It identifies players who do contested-puck work
-    regardless of role: top-line wingers who draw penalties, fourth-line centers who
-    throw 250 hits, and stay-at-home defensemen who block shots all surface honestly
-    against their own positional pool. Validated across nine NHL seasons (2020-21
-    excluded for COVID), with year-over-year repeatability of <strong>r = 0.876</strong>
-    — well above public benchmarks for Corsi/Fenwick (~0.65) and Points/60 (~0.55).
-    Full methodology and source code are in this repository.
+    physical penalties, defensive-zone faceoff wins, crease goals, close-range shots,
+    and more. The metric is not a "toughness stat." It identifies players who do
+    contested-puck work regardless of role: top-line wingers who draw penalties,
+    fourth-line centers who throw 250 hits, and stay-at-home defensemen who block shots
+    all surface honestly against their own positional pool. Validated across nine NHL
+    seasons (2020-21 excluded for COVID), with year-over-year repeatability of
+    <strong>r = 0.873</strong> — well above public benchmarks for Corsi/Fenwick (~0.65)
+    and Points/60 (~0.55). v3.1 adds close-range shot attempts as a 15th weighted
+    component; see the
+    <a href="CHANGELOG.md">CHANGELOG</a> for the full v3 → v3.1 diff.
+    Methodology and source code are in this repository.
   </div>
 </div>
 
@@ -168,7 +171,7 @@
     <div class="desc">
       Same leaderboard format, restricted to qualifying playoff performers in the
       2025-26 postseason. Smaller samples but higher-leverage rates — playoff GRIT
-      runs 27–46% hotter than regular season.
+      runs 26–43% hotter than regular season.
     </div>
     <div class="meta">295 players · Xhekaj #1 (MTL)</div>
   </a>
@@ -188,24 +191,24 @@
 <h2>Cross-Season Analysis</h2>
 <div class="grid">
 
-  <a class="card" href="viz/grit_yoy_stability.html">
+  <a class="card" href="grit_yoy_stability.html">
     <div class="title">Year-Over-Year Stability</div>
     <div class="desc">
       Pair-by-pair correlation matrix across every season pair from 2015-16 to 2025-26.
       Includes multi-gap decay analysis (1yr through 4yr) showing GRIT identifies a
       stable player archetype rather than year-specific role context.
     </div>
-    <div class="meta">20 valid pairs · mean r = 0.876 (consecutive years)</div>
+    <div class="meta">20 valid pairs · mean r = 0.873 (consecutive years)</div>
   </a>
 
-  <a class="card" href="viz/grit_playoff_delta.html">
+  <a class="card" href="grit_playoff_delta.html">
     <div class="title">Playoff Rate Inflation</div>
     <div class="desc">
       Per-player and per-team GRIT/60 inflation between regular season and playoffs,
       with a season picker covering all 9 paired seasons. Hits go up ~60%, fighting
       drops by half, crease goals come in slightly below RS rates.
     </div>
-    <div class="meta">9 seasons · mean composite ratio 1.34×</div>
+    <div class="meta">9 seasons · mean composite ratio 1.32×</div>
   </a>
 
 </div>
@@ -258,7 +261,7 @@
     <li>
       <a href="https://github.com/mjriggio-stack/grit-hockey/blob/main/GRIT_v3_FAQ.md">
         <span class="doc-name">FAQ</span>
-        <span class="doc-desc">What GRIT measures and doesn't, comparison to Corsi/Fenwick, season coverage</span>
+        <span class="doc-desc">What changed in v3.1, what GRIT measures, comparison to Corsi/Fenwick, season coverage</span>
       </a>
     </li>
     <li>
@@ -274,7 +277,13 @@
       </a>
     </li>
     <li>
-      <a href="https://github.com/mjriggio-stack/grit-hockey/blob/main/validation/v3_validation_summary.txt">
+      <a href="https://github.com/mjriggio-stack/grit-hockey/blob/main/CHANGELOG.md">
+        <span class="doc-name">Changelog</span>
+        <span class="doc-desc">Version-by-version history (v1 through v3.1) with rationale, weight tests, and deferred items</span>
+      </a>
+    </li>
+    <li>
+      <a href="https://github.com/mjriggio-stack/grit-hockey/blob/main/v3_validation_summary.txt">
         <span class="doc-name">Validation Summary</span>
         <span class="doc-desc">Full per-season YoY, pool sizes, playoff inflation tables — regenerated by build_validation_summary.py</span>
       </a>
@@ -282,7 +291,7 @@
     <li>
       <a href="https://github.com/mjriggio-stack/grit-hockey/tree/main/src">
         <span class="doc-name">Build Scripts</span>
-        <span class="doc-desc">Source code for the seven build scripts that produce everything in this repository</span>
+        <span class="doc-desc">Source code for the build scripts that produce everything in this repository</span>
       </a>
     </li>
   </ul>
@@ -295,7 +304,7 @@
       <a href="https://github.com/mjriggio-stack/grit-hockey">github.com/mjriggio-stack/grit-hockey</a>
       · Data sourced from the public NHL API (api-web.nhle.com).
     </div>
-    <div>v3 · 2025-26</div>
+    <div>v3.1 · 2025-26</div>
   </div>
   <div style="margin-top: 12px;">
     A side project by a Buffalo Sabres fan, built around a sports history podcast hosted with my father.
