@@ -45,6 +45,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from grit_version import GRIT_VERSION
+
 
 # ---------------------------------------------------------------------------
 # Path anchoring. Script assumed to live at:
@@ -171,7 +173,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>GRIT v3.1 Dashboard · __TITLE_SHORT__</title>
+<title>GRIT __VERSION__ Dashboard · __TITLE_SHORT__</title>
 <style>
   :root {
     --bg: #0d1117;
@@ -317,7 +319,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 <body>
 
 <div class="header">
-  <h1>GRIT <span class="v3badge">v3.1</span> <span class="sub">__TITLE_LONG__</span></h1>
+  <h1>GRIT <span class="v3badge">__VERSION__</span> <span class="sub">__TITLE_LONG__</span></h1>
   <div class="controls">
     <input type="text" id="search" class="search-input" placeholder="Search player..." />
     <div class="toggle-group">
@@ -336,7 +338,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 </div>
 
 <div id="status" class="status" style="margin-bottom: 20px;">
-  Data loaded · __TITLE_LONG__ · v3
+  Data loaded · __TITLE_LONG__ · __VERSION__
 </div>
 
 <div id="meta" class="meta-row"></div>
@@ -690,7 +692,7 @@ document.getElementById("btn-share").addEventListener("click", () => {
   const p = players.find(pl => pl.player_id === selectedPlayerId);
   if (!p) return;
   const sign = (p.grit_z_blend || 0) >= 0 ? "+" : "";
-  const text = `${p.name} (${p.position} · ${p.team}) — GRIT v3.1 Z: ${sign}${(p.grit_z_blend||0).toFixed(2)} | Grit/60: ${(p.raw_grit_per_60||0).toFixed(2)} | ${p.games_played} GP`;
+  const text = `${p.name} (${p.position} · ${p.team}) — GRIT __VERSION__ Z: ${sign}${(p.grit_z_blend||0).toFixed(2)} | Grit/60: ${(p.raw_grit_per_60||0).toFixed(2)} | ${p.games_played} GP`;
   if (navigator.clipboard) {
     navigator.clipboard.writeText(text).then(() => showToast("Copied to clipboard."));
   } else {
@@ -790,6 +792,7 @@ def render_html(records: list[dict], season_tag: str) -> str:
     html = html.replace("__TITLE_SHORT__", title_short)
     html = html.replace("__SEASON_TAG__", season_tag)
     html = html.replace("__DATA_JSON__", data_json)
+    html = html.replace("__VERSION__", GRIT_VERSION)
     return html
 
 

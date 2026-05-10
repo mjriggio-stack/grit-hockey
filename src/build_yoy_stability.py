@@ -46,6 +46,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from grit_version import GRIT_VERSION
+
 
 # ---------------------------------------------------------------------------
 # Path anchoring. Script assumed to live at:
@@ -169,7 +171,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>GRIT v3.1 · Year-Over-Year Stability</title>
+<title>GRIT __VERSION__ · Year-Over-Year Stability</title>
 <style>
   :root {
     --bg: #0d1117;
@@ -316,7 +318,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 <body>
 
 <div class="header">
-  <h1>GRIT <span class="v3badge">v3.1</span> <span class="sub">Year-Over-Year Stability</span></h1>
+  <h1>GRIT <span class="v3badge">__VERSION__</span> <span class="sub">Year-Over-Year Stability</span></h1>
   <div class="lede">
     Correlation of player <code>grit_z_blend</code> across season pairs. Each
     valid pair takes the players who appeared in both seasons and computes the
@@ -673,6 +675,7 @@ def render_html(seasons: list[int], pairs: list[dict], summary: dict) -> str:
     html = html.replace("__PAIRS_JSON__", json.dumps(pairs, separators=(",", ":")))
     html = html.replace("__SEASONS_JSON__", json.dumps(seasons, separators=(",", ":")))
     html = html.replace("__SUMMARY_JSON__", json.dumps(summary, separators=(",", ":")))
+    html = html.replace("__VERSION__", GRIT_VERSION)
     return html
 
 

@@ -50,6 +50,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from grit_version import GRIT_VERSION
+
 
 # ---------------------------------------------------------------------------
 # Path anchoring. Script assumed to live at:
@@ -223,7 +225,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>GRIT v3.1 · Playoff Rate Inflation</title>
+<title>GRIT __VERSION__ · Playoff Rate Inflation</title>
 <style>
   :root {
     --bg: #0d1117;
@@ -351,7 +353,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 
 <div class="header">
   <div>
-    <h1>GRIT <span class="v3badge">v3.1</span> <span class="sub" id="season-sub">Playoff Rate Inflation</span></h1>
+    <h1>GRIT <span class="v3badge">__VERSION__</span> <span class="sub" id="season-sub">Playoff Rate Inflation</span></h1>
     <div class="lede">
       Inflation = playoff Grit/60 ÷ regular-season Grit/60. <strong>1.50</strong>
       means the player produced GRIT events at 1.5× their regular-season rate
@@ -738,6 +740,7 @@ def render_html(seasons_data: dict) -> str:
     html = HTML_TEMPLATE
     html = html.replace("__SEASONS_JSON__", json.dumps(seasons_data, separators=(",", ":"), ensure_ascii=False))
     html = html.replace("__MIN_GP__", str(MIN_PO_GP))
+    html = html.replace("__VERSION__", GRIT_VERSION)
     return html
 
 

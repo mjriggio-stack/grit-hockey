@@ -40,6 +40,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from grit_version import GRIT_VERSION
+
 
 # ---------------------------------------------------------------------------
 # Path anchoring. Script assumed to live at:
@@ -106,7 +108,7 @@ def section_yoy(dfs: dict[int, pd.DataFrame]) -> str:
     out.append("1. YEAR-OVER-YEAR REPEATABILITY (regular season, grit_z_blend)")
     out.append("=" * 80)
     out.append("")
-    out.append(f'{"Pair":<20}{"n":>8}{"v3.1 r":>10}')
+    out.append(f'{"Pair":<20}{"n":>8}{f"{GRIT_VERSION} r":>10}')
     out.append("-" * 40)
 
     seasons = sorted(dfs.keys())
@@ -342,7 +344,7 @@ def build_summary(rs_dfs: dict[int, pd.DataFrame],
 
     sections = []
     sections.append("=" * 80)
-    sections.append("V3.1 VALIDATION SUMMARY")
+    sections.append(f"{GRIT_VERSION.upper()} VALIDATION SUMMARY")
     sections.append("=" * 80)
     sections.append("")
     sections.append(f"Generated:        {today}")

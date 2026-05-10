@@ -46,6 +46,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from grit_version import GRIT_VERSION
+
 
 # ============================================================================
 # SQL connection (mirrors build_v3.py)
@@ -418,7 +420,7 @@ def render_html(manifest, season_label, sidecar_filename):
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>GRIT v3 Player Cards · {season_label}</title>
+<title>GRIT {GRIT_VERSION} Player Cards · {season_label}</title>
 <style>
 *,*::before,*::after{{box-sizing:border-box;}}
 body{{margin:0;padding:0;background:#0d1117;color:#e6edf3;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;}}
@@ -475,7 +477,7 @@ header input:focus,header select:focus{{outline:1px solid #f9a03f;}}
 <body>
 <header>
   <h1>GRIT</h1>
-  <span class="v3badge">v3</span>
+  <span class="v3badge">{GRIT_VERSION}</span>
   <span class="meta">player cards · {season_label}</span>
   <input id="search" type="text" placeholder="Search name..." autocomplete="off">
   <select id="team-filter">
