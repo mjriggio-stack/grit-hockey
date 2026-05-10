@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>GRIT v3 Dashboard · 2025-26</title>
+<title>GRIT v3.1 Dashboard · 2025-26</title>
 <style>
   :root {
     --bg: #0d1117;
@@ -149,7 +149,7 @@
 <body>
 
 <div class="header">
-  <h1>GRIT <span class="v3badge">v3</span> <span class="sub">2025-26 Regular Season</span></h1>
+  <h1>GRIT <span class="v3badge">v3.1</span> <span class="sub">2025-26 Regular Season</span></h1>
   <div class="controls">
     <input type="text" id="search" class="search-input" placeholder="Search player..." />
     <div class="toggle-group">
@@ -522,7 +522,7 @@ document.getElementById("btn-share").addEventListener("click", () => {
   const p = players.find(pl => pl.player_id === selectedPlayerId);
   if (!p) return;
   const sign = (p.grit_z_blend || 0) >= 0 ? "+" : "";
-  const text = `${p.name} (${p.position} · ${p.team}) — GRIT v3 Z: ${sign}${(p.grit_z_blend||0).toFixed(2)} | Grit/60: ${(p.raw_grit_per_60||0).toFixed(2)} | ${p.games_played} GP`;
+  const text = `${p.name} (${p.position} · ${p.team}) — GRIT v3.1 Z: ${sign}${(p.grit_z_blend||0).toFixed(2)} | Grit/60: ${(p.raw_grit_per_60||0).toFixed(2)} | ${p.games_played} GP`;
   if (navigator.clipboard) {
     navigator.clipboard.writeText(text).then(() => showToast("Copied to clipboard."));
   } else {

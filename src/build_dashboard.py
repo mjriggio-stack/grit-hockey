@@ -171,7 +171,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>GRIT v3 Dashboard · __TITLE_SHORT__</title>
+<title>GRIT v3.1 Dashboard · __TITLE_SHORT__</title>
 <style>
   :root {
     --bg: #0d1117;
@@ -317,7 +317,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 <body>
 
 <div class="header">
-  <h1>GRIT <span class="v3badge">v3</span> <span class="sub">__TITLE_LONG__</span></h1>
+  <h1>GRIT <span class="v3badge">v3.1</span> <span class="sub">__TITLE_LONG__</span></h1>
   <div class="controls">
     <input type="text" id="search" class="search-input" placeholder="Search player..." />
     <div class="toggle-group">
@@ -690,7 +690,7 @@ document.getElementById("btn-share").addEventListener("click", () => {
   const p = players.find(pl => pl.player_id === selectedPlayerId);
   if (!p) return;
   const sign = (p.grit_z_blend || 0) >= 0 ? "+" : "";
-  const text = `${p.name} (${p.position} · ${p.team}) — GRIT v3 Z: ${sign}${(p.grit_z_blend||0).toFixed(2)} | Grit/60: ${(p.raw_grit_per_60||0).toFixed(2)} | ${p.games_played} GP`;
+  const text = `${p.name} (${p.position} · ${p.team}) — GRIT v3.1 Z: ${sign}${(p.grit_z_blend||0).toFixed(2)} | Grit/60: ${(p.raw_grit_per_60||0).toFixed(2)} | ${p.games_played} GP`;
   if (navigator.clipboard) {
     navigator.clipboard.writeText(text).then(() => showToast("Copied to clipboard."));
   } else {
