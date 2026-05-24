@@ -241,3 +241,86 @@ Three were considered and ruled out:
 - **Forecheck Offense** — off-thesis (offensive zone success isn't the same as contested-puck contribution)
 - **Botched Retrievals** — high double-count risk with existing DZ giveaways
 - **Passing data** — too noisy at the granularity needed for GRIT pooling
+
+## 14. EYP (Earning Your Points) framework
+
+EYP is an analytical layer built on top of v3.1 GRIT scores. It is not a metric — it's a classification and watchlist system for identifying forwards whose GRIT contribution is ahead of their scoring output. The thesis is that deployment context, not talent ceiling, is what separates many high-GRIT young forwards from higher-production peers.
+
+EYP is implemented in `build_eyp.py`, `build_eyp_career.py`, and `build_eyp_career_html.py`. Outputs live in `data/` (CSVs) and `viz/` (interactive HTML).
+
+### Eligibility
+
+EYP is scoped to **forwards only** (positions C, L, R) with a minimum of **40 games played** in the season. Defensemen are excluded — the framework's thesis is specifically about forward scoring opportunity and deployment, which is a different question for defense.
+
+All GRIT scores used by EYP are drawn from the `grit_scores` table filtered to `strength = 'all'` (all-strengths). The 5v5 and PK splits are not used by EYP.
+
+### Quadrant classification
+
+Each qualifying forward is placed into one of four quadrants based on two axes:
+
+- **Vertical axis:** points relative to the season's points median for qualifying forwards. Above median = "hi pts"; below = "lo pts."
+- **Horizontal axis:** `grit_z_blend` relative to zero. At or above zero = "hi grit"; below = "lo grit."
+
+The four quadrants:
+
+| | Hi GRIT (grit_z_blend ≥ 0) | Lo GRIT (grit_z_blend < 0) |
+|---|---|---|
+| **Hi pts (above median)** | GREEN | RED |
+| **Lo pts (below median)** | BLUE | GRAY |
+
+- **GREEN** — high GRIT, high scoring. The target state: players earning points while also doing the contested-puck work.
+- **RED** — high scoring, low GRIT. Scorers whose production isn't coming from contested-puck activity.
+- **BLUE** — high GRIT, low scoring. The EYP watchlist quadrant. These forwards are doing the work; the production hasn't followed yet.
+- **GRAY** — low on both dimensions.
+
+The season points median is computed fresh each season within the qualifying pool. It is not a fixed threshold.
+
+### Watchlist
+
+The watchlist is the BLUE quadrant filtered further:
+
+- Age ≤ 25 (end-of-season integer age: `season_year − birth_year`)
+- Points ≥ 25 in the season
+- GP ≥ 40 (inherited from eligibility floor)
+
+Age is sourced from the `players` SQL table (populated by `scrape_players.py`). Players with a NULL birth year are excluded from the watchlist but remain in the full quadrant output.
+
+The points floor (≥ 25) is not a hard threshold baked into the framework design — it's a practical filter to separate "high-GRIT young forward who is close to the median" from "high-GRIT young forward on a fourth line with 12 points." The EYP thesis is about deployment-limited upside, not pure grinders.
+
+### Headline filter
+
+The headline filter is a tighter cut of the watchlist for public-facing output:
+
+- All watchlist criteria apply
+- Points gap ≤ 5 from the season median (i.e., within 5 points of qualifying as a GREEN)
+
+The gap=5 ceiling was set based on 2025-26 gradient analysis. At gap=1, three names qualify (Greig, Sourdif, Minten). At gap=5, two more appear (Samoskevich, Heineman). At gap=7, a name appears (Hryckowian, DAL) who at 30 points vs a 36-point median starts looking more like a role-player plateau than an EYP candidate. Every name at gap ≤ 5 in 2025-26 is a 22-25 year old deployment-limited forward — which is the signal the framework is designed to surface.
+
+### 2025-26 headline watchlist
+
+| Player | Team | Age | Gap |
+|---|---|---:|---:|
+| Ridly Greig | OTT | 24 | 1 |
+| Justin Sourdif | WSH | 24 | 1 |
+| Fraser Minten | BOS | 22 | 1 |
+| Matvei Samoskevich | FLA | 24 | 4 |
+| Oliver Heineman | NYI | 25 | 5 |
+
+### Blue-to-Green transitions (ever_btog)
+
+The career pivot (`build_eyp_career.py`) tracks multi-season quadrant sequences for all forwards who qualified in at least one season. A Blue-to-Green (btog) transition is defined as a BLUE season followed by a GREEN season in consecutive qualifying years.
+
+`ever_btog` flags players who have made at least one such transition across their qualifying history. As of the post-fix v3.2 data, 59 players qualify as ever_btog across the 2016-2026 dataset.
+
+The btog pattern is the empirical backbone of the EYP thesis: if BLUE-quadrant players were simply deployment-limited rather than talent-limited, you'd expect to see a meaningful share of them graduate to GREEN when circumstances change. The 59-player ever_btog count across 800 qualifying forwards over 10 seasons is the current evidence base; the thesis would benefit from additional validation work (tabled for v3.2).
+
+### Case study: Josh Doan (Utah)
+
+Josh Doan is used as a canonical EYP case study. He appeared in the BLUE quadrant in 2024-25 — high GRIT contribution with scoring output below the qualifying forward median — and moved to GREEN in 2025-26 as his offensive role expanded. The transition is a clean illustration of the EYP thesis: the GRIT signal was present before the scoring arrived, and deployment was the separating variable.
+
+### Data pipeline notes
+
+- `scrape_scoring.py` populates `skater_scoring` from the NHL `/skater/summary` and `/skater/faceoffwins` endpoints. A deduplication fix was applied in v3.2 (see CHANGELOG) — both endpoints return duplicate `(playerId, teamAbbrevs)` rows for many players, which inflated counting stats 2-3× before the fix.
+- `scrape_players.py` populates the `players` table with birth year data. 2,103 rows as of v3.2; 4 NULL orphans remain (players present in `grit_scores` but not resolved in the NHL player bio endpoint).
+- EYP outputs use `strength = 'all'` from `grit_scores`. Do not join against the 5v5 or PK rows.
+- Traded players retain their full-season counting stats in `skater_scoring` via the `teamAbbrevs` deduplication logic — they are not split by team stint.

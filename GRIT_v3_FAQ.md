@@ -38,6 +38,75 @@ Note that the two events use identical filenames (`raw_close_shots` and `raw_cre
 
 ---
 
+## What is EYP (Earning Your Points)?
+
+EYP is an analytical layer built on top of v3.1 GRIT scores. It classifies qualifying forwards into four quadrants based on two axes — GRIT contribution and scoring output — and uses that classification to identify players whose physical contribution is ahead of their offensive production.
+
+The core question EYP asks: are there young forwards who are already doing the contested-puck work but haven't yet gotten the scoring opportunity to show for it? If so, their GRIT score should be tracking before the points arrive. EYP is designed to surface those players systematically rather than by eye test alone.
+
+EYP is not a metric. It's a classification and watchlist system. It doesn't produce a number; it produces a list of names worth paying attention to.
+
+---
+
+## How does the EYP quadrant system work?
+
+Every qualifying forward (minimum 40 GP, positions C/L/R) is placed in one of four quadrants each season:
+
+| | Hi GRIT (grit_z_blend ≥ 0) | Lo GRIT (grit_z_blend < 0) |
+|---|---|---|
+| **Hi pts (above season median)** | GREEN | RED |
+| **Lo pts (below season median)** | BLUE | GRAY |
+
+- **GREEN** — high GRIT, high scoring. The target state.
+- **RED** — high scoring, low GRIT. Points are coming from somewhere other than contested-puck activity.
+- **BLUE** — high GRIT, low scoring. The EYP watchlist quadrant. Doing the work; the production hasn't followed.
+- **GRAY** — below median on both dimensions.
+
+The points median is computed fresh each season within the qualifying pool — it's not a fixed number. The GRIT cutoff is zero on the `grit_z_blend` scale, meaning above-average within positional pool.
+
+---
+
+## Who makes the EYP watchlist?
+
+The watchlist is the BLUE quadrant filtered to:
+
+- Age ≤ 25 (end-of-season: `season_year − birth_year`)
+- Points ≥ 25 in the season
+
+The age and points floors separate "deployment-limited young forwards with real upside" from "fourth-liners with 12 points who happen to throw a lot of hits." The EYP thesis is about forwards who are close to scoring at a higher rate but haven't been given the ice time or opportunity yet.
+
+The headline filter tightens this further to forwards within 5 points of the season median — meaning they are genuinely close to the GREEN quadrant and a modest role expansion could get them there.
+
+---
+
+## Who are the 2025-26 EYP headline names?
+
+| Player | Team | Age | Points gap to median |
+|---|---|---:|---:|
+| Ridly Greig | OTT | 24 | 1 |
+| Justin Sourdif | WSH | 24 | 1 |
+| Fraser Minten | BOS | 22 | 1 |
+| Matvei Samoskevich | FLA | 24 | 4 |
+| Oliver Heineman | NYI | 25 | 5 |
+
+All five are 22-25 years old. All are within 5 points of the qualifying forward median for 2025-26. All have GRIT-Z scores above zero — meaning they are above average in contested-puck contribution within their positional pool. The thesis is that deployment context, not talent ceiling, is what separates them from GREEN-quadrant players.
+
+---
+
+## What is a Blue-to-Green transition?
+
+A Blue-to-Green (btog) transition is when a player appears in the BLUE quadrant one season and the GREEN quadrant the next. It's the empirical signal the EYP framework is built around: if BLUE players are genuinely deployment-limited rather than talent-limited, a meaningful number of them should graduate to GREEN when their role expands.
+
+Across the 10-season dataset (2016-2026, COVID season excluded), 59 of 800 qualifying forwards have made at least one btog transition. The framework tracks this at the career level so you can see which current BLUE players have a history of making the jump and which are in an extended BLUE streak.
+
+---
+
+## What's a good example of an EYP Blue-to-Green transition?
+
+Josh Doan (Utah) is the canonical case study. He appeared in the BLUE quadrant in 2024-25 — strong GRIT contribution, scoring below the qualifying forward median — then moved to GREEN in 2025-26 as his offensive role expanded. The GRIT signal was present before the scoring arrived. That's exactly what EYP is designed to identify.
+
+---
+
 ## What is GRIT?
 
 GRIT (Gritty Role Impact Total) is a hockey analytics metric that measures **contested-puck contribution** — a count of the events that happen when a player is physically competing for or against a puck in a contested area of the ice.

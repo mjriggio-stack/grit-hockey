@@ -6,6 +6,44 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ---
 
+## [v3.2] — in progress
+
+### Fixed
+
+- **`scrape_scoring.py` duplicate-row bug** — NHL `/skater/summary` and `/skater/faceoffwins` endpoints return identical duplicate `(playerId, teamAbbrevs)` rows for many players. The non-deduplicated left merge fanned out summary rows; the downstream `groupby` sum then inflated every counting stat by 2× or 3×. Example: Hamilton 22-23 showed GP=246, points=222 instead of GP=82, points=74.
+
+  Fix: both endpoints are now deduplicated on `(playerId, teamAbbrevs)` + counting stats before the merge. Identical-row dupes collapse to 1 row; genuine traded-player splits (different `teamAbbrevs`) are preserved.
+
+  All 10 RS seasons re-scraped clean. Four players with GP > 82 (Barrie 85, Hathaway 84, Eller 84, Johnson 83) are confirmed legitimate trade-deadline overages, not artifacts.
+
+- **EYP outputs regenerated** following the `scrape_scoring` fix. All per-season CSVs, career pivot, and career scatter HTML rebuilt against clean data. Notable differences from pre-fix outputs:
+  - 800 qualifying forwards (was 797 — 3 new players surfaced with clean stats)
+  - `ever_btog` count: 59 (was 63)
+  - 2022-23 headline: 0 candidates (real artifact, not a bug)
+  - 2024-25 headline: 2 candidates, Greig and Bolduc only (was 5)
+  - Josh Anderson active BLUE streak of 5 seasons now visible
+
+### Added
+
+- **EYP (Earning Your Points) framework** — quadrant analysis layered on top of v3.1 GRIT scores. Classifies qualifying forwards (GP ≥ 40) into four quadrants by GRIT-Z vs points-above-season-median:
+  - GREEN (hi grit, hi pts), RED (lo grit, hi pts), BLUE (hi grit, lo pts), GRAY (lo grit, lo pts)
+  - Watchlist: BLUE forwards, age ≤ 25, pts ≥ 25
+  - Headline filter: watchlist + pts gap ≤ 5 from median
+
+- **`scrape_players.py`** — new script; scrapes NHL player bio data (birth year) into `players` SQL table (2,103 rows, 4 NULL orphans).
+
+- **`build_eyp.py`** — updated with `--watchlist-filter` mode, age column, configurable headline cutoffs.
+
+- **`build_eyp_career.py`** — new; multi-season pivot across 800 forwards × 25 columns, Blue→Green transition tracking.
+
+- **`build_eyp_career_html.py`** — new; sortable career table + interactive scatter with single-player trajectory mode, position/team filters, compare-with arrows, age ≤ 25 ring, PNG export.
+
+### 2025-26 headline watchlist
+
+Greig (OTT, age 24, gap=1) · Sourdif (WSH, age 24, gap=1) · Minten (BOS, age 22, gap=1) · Samoskevich (FLA, age 24, gap=4) · Heineman (NYI, age 25, gap=5)
+
+---
+
 ## [v3.1] — 2026-05-09
 
 The v3.1 release adds one weighted component to v3 and is otherwise identical. v3.1 ↔ v3 correlation is ~0.997 across all validation seasons; the rank order is essentially preserved.
