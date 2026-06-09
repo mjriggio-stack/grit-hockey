@@ -42,7 +42,7 @@ Note that the two events use identical filenames (`raw_close_shots` and `raw_cre
 
 EYP is an analytical layer built on top of v3.1 GRIT scores. It classifies qualifying forwards into four quadrants based on two axes — GRIT contribution and scoring output — and uses that classification to identify players whose physical contribution is ahead of their offensive production.
 
-The core question EYP asks: are there young forwards who are already doing the contested-puck work but haven't yet gotten the scoring opportunity to show for it? If so, their GRIT score should be tracking before the points arrive. EYP is designed to surface those players systematically rather than by eye test alone.
+The core question EYP asks: among forwards already doing the contested-puck work but not yet scoring, which ones are worth watching? EYP surfaces that population systematically rather than by eye test alone. An important caveat that the analysis forced (see "What is a Blue-to-Green transition?" below): EYP is a screen on the population, not a forecast. A high GRIT score does not predict that a low-scoring forward will start scoring. If anything it is a mild signal the other way.
 
 EYP is not a metric. It's a classification and watchlist system. It doesn't produce a number; it produces a list of names worth paying attention to.
 
@@ -54,56 +54,79 @@ Every qualifying forward (minimum 40 GP, positions C/L/R) is placed in one of fo
 
 | | Hi GRIT (grit_z_blend ≥ 0) | Lo GRIT (grit_z_blend < 0) |
 |---|---|---|
-| **Hi pts (above season median)** | GREEN | RED |
-| **Lo pts (below season median)** | BLUE | GRAY |
+| **Hi pts (at/above the 41-pt bar)** | GREEN | RED |
+| **Lo pts (below the 41-pt bar)** | BLUE | GRAY |
 
 - **GREEN** — high GRIT, high scoring. The target state.
 - **RED** — high scoring, low GRIT. Points are coming from somewhere other than contested-puck activity.
 - **BLUE** — high GRIT, low scoring. The EYP watchlist quadrant. Doing the work; the production hasn't followed.
-- **GRAY** — below median on both dimensions.
+- **GRAY** — below the bar on points, below average on GRIT.
 
-The points median is computed fresh each season within the qualifying pool — it's not a fixed number. The GRIT cutoff is zero on the `grit_z_blend` scale, meaning above-average within positional pool.
+The points axis is an absolute bar, not the per-season median. The bar is 41 points (0.5 points per game over 82) for full seasons, pro-rated for shortened seasons (the 71-game 2019-20 season uses 35.5). The median was used originally and was wrong: a median split forces roughly 50/50 above and below every season, which mechanically guarantees symmetric crossing rates and makes "players cross the line" findings partly an artifact of the split. The fixed bar makes "high scoring" a real, stable population (about 40 percent of qualifying forwards) rather than half the field by construction. The GRIT cutoff is zero on the `grit_z_blend` scale, meaning above-average within positional pool.
 
 ---
 
 ## Who makes the EYP watchlist?
 
-The watchlist is the BLUE quadrant filtered to:
+The watchlist is the BLUE quadrant (high GRIT, below the 41-point bar). The published "headline" shortlist narrows that to:
 
-- Age ≤ 25 (end-of-season: `season_year − birth_year`)
-- Points ≥ 25 in the season
+- Age ≤ 27 (end-of-season: `season_year − birth_year`)
+- Within 5 points of the bar (`pts_gap ≤ 5`, i.e. 36+ points in a full season)
 
-The age and points floors separate "deployment-limited young forwards with real upside" from "fourth-liners with 12 points who happen to throw a lot of hits." The EYP thesis is about forwards who are close to scoring at a higher rate but haven't been given the ice time or opportunity yet.
+The age gate is set at 27 based on btog sustain analysis on the absolute bar. Transitions made at age ≤ 27 hold (stay at or above the bar the following season) about 78% of the time, dropping to roughly 54% at 28-30 and 50% at 31-33. Age 27 is the empirically supported upper bound; older transitions are more often role fluctuations than durable changes.
 
-The headline filter tightens this further to forwards within 5 points of the season median — meaning they are genuinely close to the GREEN quadrant and a modest role expansion could get them there.
+The proximity filter (within 5 points of the bar) is doing real predictive work, but not for the reason the original thesis assumed. A BLUE forward already close to the bar is far likelier to cross it than one 20 points below, and that proximity, together with age, is what actually predicts crossing. GRIT level does not (see below). So the headline list is best read as "young, high-effort forwards who are already close to the scoring bar," not "forwards whose GRIT predicts a breakout."
 
 ---
 
 ## Who are the 2025-26 EYP headline names?
 
-| Player | Team | Age | Points gap to median |
+| Player | Team | Age | Points gap to bar |
 |---|---|---:|---:|
-| Ridly Greig | OTT | 24 | 1 |
-| Justin Sourdif | WSH | 24 | 1 |
-| Fraser Minten | BOS | 22 | 1 |
-| Matvei Samoskevich | FLA | 24 | 4 |
-| Oliver Heineman | NYI | 25 | 5 |
+| Will Cuylle | NYR | 24 | 3 |
+| Vasily Podkolzin | EDM | 25 | 4 |
+| Peyton Krebs | BUF | 25 | 2 |
+| Jake Neighbours | STL | 24 | 5 |
+| Ryan Poehling | ANA | 27 | 5 |
+| Eeli Tolvanen | SEA | 27 | 5 |
 
-All five are 22-25 years old. All are within 5 points of the qualifying forward median for 2025-26. All have GRIT-Z scores above zero — meaning they are above average in contested-puck contribution within their positional pool. The thesis is that deployment context, not talent ceiling, is what separates them from GREEN-quadrant players.
+All six are age 24-27, within 5 points of the 41-point bar in 2025-26, and above zero on GRIT-Z. They are young, high-effort forwards sitting just under the scoring bar. The honest framing is proximity, not prophecy: being a few points short of 41 with a positive GRIT score is what lands them here, and the proximity is what makes a crossing plausible. The GRIT score is the screen that defines the pool, not evidence any one of them will cross.
+
+Peyton Krebs (BUF) is the clean local case: 39 points, two off the bar, exactly the BLUE-near-the-bar profile that crosses most often. Jake Neighbours appears here in both 2023-24 and 2025-26, a genuine persistence signal. Sorting the list by GRIT-Z is misleading given the finding below; gap-to-bar or age is the more honest ordering.
 
 ---
 
 ## What is a Blue-to-Green transition?
 
-A Blue-to-Green (btog) transition is when a player appears in the BLUE quadrant one season and the GREEN quadrant the next. It's the empirical signal the EYP framework is built around: if BLUE players are genuinely deployment-limited rather than talent-limited, a meaningful number of them should graduate to GREEN when their role expands.
+A Blue-to-Green (btog) transition is when a player appears in the BLUE quadrant one season and the GREEN quadrant the next. It was built to test the original EYP thesis: if BLUE players are deployment-limited rather than talent-limited, a meaningful share should graduate to GREEN when their role expands, and GRIT should flag which ones. The test forced a correction to that thesis.
 
-Across the 10-season dataset (2016-2026, COVID season excluded), 59 of 800 qualifying forwards have made at least one btog transition. The framework tracks this at the career level so you can see which current BLUE players have a history of making the jump and which are in an extended BLUE streak.
+There is one definitional fork, and both counts are reported. The exclusive definition requires literal consecutive years, so the 2020-to-2022 pair does not count (the unobserved 2020-21 COVID season sits between them): 70 transitions across 63 players. The inclusive definition accepts 2020-to-2022 as a player's consecutive qualifying seasons: 79 transitions across 69 players.
+
+**The points jump is real but largely a definitional artifact.** Raw, the increase averages about +17 points and every transition is positive. That is forced by the rule: BLUE is below the bar and GREEN is above it, so a transition is by construction a crossing of the bar from below. Pace-adjusted to per-82, the honest magnitude is about +13 points (exclusive) to +14.5 (inclusive, which runs hotter because the COVID-gap crossings span a short 2020 season into a full 2022).
+
+**The base rate is low and GRIT does not predict who crosses.** Only about 11% of BLUE forwards reach GREEN the next season, and about 13% reach the bar at all (GREEN or RED). BLUE is sticky: the dominant outcome is another BLUE season. Critically, blue-season GRIT does not forecast the jump. Forwards who crossed had *lower* blue-season GRIT-Z than those who stayed (0.67 vs 0.99, p = 0.0012); the logistic odds ratio is about 0.66 per standard deviation. What predicts the jump is proximity to the bar and age, not grit.
+
+**The negative control settles it.** Running the same test on GRAY forwards (low grit, below the bar) is the low-grit mirror. Low-grit below-bar forwards reach the bar at about 28%, more than double the 13% rate for high-grit BLUE forwards. A below-bar forward is roughly twice as likely to start scoring if their grit is *low*, not high. The proximity mechanism is identical in both pools, so the crossing is regression toward the bar, and grit is mildly the wrong direction. This is why EYP is framed as a population screen, not a breakout predictor: GRIT tells you which contested-puck forwards are worth watching, not which ones will score.
+
+**Transitions that happen do tend to hold, more so when young.** Of transitions with a following season, about 68% sustain (stay at or above the bar). That rate is about 78% for transitions made at age ≤ 27 and falls to roughly 54% at 28-30 and 50% at 31-33, which is the basis for the age-27 watchlist gate. The wing-versus-center sustain gap is modest on the absolute bar (wings ~71%, centers ~65%), narrower than earlier median-era estimates suggested.
 
 ---
 
-## What's a good example of an EYP Blue-to-Green transition?
+## What are some good examples of EYP Blue-to-Green transitions?
 
-Josh Doan (Utah) is the canonical case study. He appeared in the BLUE quadrant in 2024-25 — strong GRIT contribution, scoring below the qualifying forward median — then moved to GREEN in 2025-26 as his offensive role expanded. The GRIT signal was present before the scoring arrived. That's exactly what EYP is designed to identify.
+These are illustrations of transitions that happened, chosen with hindsight. Read them as survivorship, not proof the screen forecasts breakouts: for every name here, roughly eight BLUE forwards stayed BLUE, and the low-grit GRAY pool produced crossers at twice the rate. With that caveat:
+
+**Sam Bennett (C, FLA)** crossed BLUE-to-GREEN in 2023-24 on the absolute bar, his scoring finally clearing 41 in Florida. He had logged high-GRIT, below-bar seasons before that. The role and finishing arrived together; the GRIT was present throughout but did not signal the timing.
+
+**Lawson Crouse (L, UTA)** is a two-time crosser on the bar (2022-23 and again 2025-26), a forward who oscillates around the 41-point line rather than clearing it once and holding, which is itself typical of how noisy these crossings are.
+
+**Tom Wilson (R, WSH)** crossed in 2019-20 and again in 2024-25, the latter a strong scoring year in Washington. One of the higher-GRIT forwards in the dataset, but his crossings track role and health, not a GRIT signal that led the production.
+
+**Joel Eriksson Ek (C, MIN)** crossed in 2025-26. A center whose GRIT is driven by hits and physical engagement rather than faceoffs alone, which makes his contested-puck profile more durable than a faceoff-dependent center's, though that durability is about GRIT persistence, not scoring prediction.
+
+**Josh Doan** is the instructive counter-case. He did not cross BLUE-to-GREEN at all. In 2024-25 he was GRAY (below the bar AND below-average GRIT, GRIT-Z −0.40, 19 points), then jumped to GREEN in 2025-26 with 52 points. His breakout came from the *low-grit* side of the board, not the watchlist quadrant. That is exactly the pattern the negative control predicts: below-bar forwards who break out are more often low-grit than high-grit. Doan is a useful reminder that GRIT did not flag the player who actually popped.
+
+**Josh Anderson (R, MTL)** is the cautionary counterpoint. He crossed BLUE-to-GREEN in 2018-19, then fell back to BLUE and has stayed there for five consecutive seasons. The role expansion that produced the GREEN year was temporary. He is why "sustained" is tracked alongside the transition, and why a single crossing is weak evidence about a player.
 
 ---
 

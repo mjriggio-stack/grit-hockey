@@ -242,85 +242,69 @@ Three were considered and ruled out:
 - **Botched Retrievals** — high double-count risk with existing DZ giveaways
 - **Passing data** — too noisy at the granularity needed for GRIT pooling
 
-## 14. EYP (Earning Your Points) framework
+## 14. The EYP (Earning Your Points) framework
 
-EYP is an analytical layer built on top of v3.1 GRIT scores. It is not a metric — it's a classification and watchlist system for identifying forwards whose GRIT contribution is ahead of their scoring output. The thesis is that deployment context, not talent ceiling, is what separates many high-GRIT young forwards from higher-production peers.
+EYP is an analytical layer on top of the per-season GRIT outputs. It is not part of the GRIT metric. It is a way of reading the metric to ask one question: among forwards who contribute contested-puck value but are not scoring, what happens to them, and does GRIT tell you which ones break out.
 
-EYP is implemented in `build_eyp.py`, `build_eyp_career.py`, and `build_eyp_career_html.py`. Outputs live in `data/` (CSVs) and `viz/` (interactive HTML).
+### Quadrant definition
 
-### Eligibility
+For qualifying forwards (GP >= 40, positions C/L/R) in a season, EYP splits on two axes:
 
-EYP is scoped to **forwards only** (positions C, L, R) with a minimum of **40 games played** in the season. Defensemen are excluded — the framework's thesis is specifically about forward scoring opportunity and deployment, which is a different question for defense.
+- Vertical: GRIT-Z (grit_z_blend) at 0. At or above 0 is "high grit."
+- Horizontal: an ABSOLUTE points bar, not the per-season median. The bar is 41 points (0.5 pts/game over 82) for full seasons, pro-rated for shortened seasons (2019-20, tag 2020, ran 71 games, so 0.5 * 71 = 35.5).
 
-All GRIT scores used by EYP are drawn from the `grit_scores` table filtered to `strength = 'all'` (all-strengths). The 5v5 and PK splits are not used by EYP.
+That gives four quadrants:
 
-### Quadrant classification
+- GREEN (hi grit, at/above bar): contributing contested-puck value and scoring.
+- RED (lo grit, at/above bar): scoring without the contested-puck profile.
+- BLUE (hi grit, below bar): contested-puck value without the scoring. The watchlist quadrant.
+- GRAY (lo grit, below bar): below both.
 
-Each qualifying forward is placed into one of four quadrants based on two axes:
+The points axis was originally the per-season median. That was wrong. A median split mechanically forces roughly 50/50 above and below, which guarantees symmetric crossing rates and makes any "players cross the line" finding partly an artifact of the split itself. The absolute bar fixes a real scoring level (41 points), so "high scoring" is a genuine minority population (about 40 percent of qualifying forwards), and crossing the bar means something fixed rather than something relative to that year's field. All figures below are on the absolute bar.
 
-- **Vertical axis:** points relative to the season's points median for qualifying forwards. Above median = "hi pts"; below = "lo pts."
-- **Horizontal axis:** `grit_z_blend` relative to zero. At or above zero = "hi grit"; below = "lo grit."
+The classification logic (the bar, the pro-ration, and assign_quadrant) lives in eyp_common.py as the single source of truth, imported by build_eyp.py, build_eyp_career.py, and build_eyp_career_html.py so the three cannot drift.
 
-The four quadrants:
+### The Blue-to-Green question
 
-| | Hi GRIT (grit_z_blend ≥ 0) | Lo GRIT (grit_z_blend < 0) |
-|---|---|---|
-| **Hi pts (above median)** | GREEN | RED |
-| **Lo pts (below median)** | BLUE | GRAY |
+The original EYP thesis was that BLUE forwards are undervalued breakouts waiting to happen, and that GRIT identifies them. The Blue-to-Green (btog) analysis tested that and forced a correction to the thesis.
 
-- **GREEN** — high GRIT, high scoring. The target state: players earning points while also doing the contested-puck work.
-- **RED** — high scoring, low GRIT. Scorers whose production isn't coming from contested-puck activity.
-- **BLUE** — high GRIT, low scoring. The EYP watchlist quadrant. These forwards are doing the work; the production hasn't followed yet.
-- **GRAY** — low on both dimensions.
+A btog transition is a forward who is BLUE in one season and GREEN in the next qualifying season. There is one definitional fork, and the project reports both:
 
-The season points median is computed fresh each season within the qualifying pool. It is not a fixed threshold.
+- Exclusive (literal consecutive years): the 2020 to 2022 pair does NOT count, because the unobserved 2020-21 COVID season sits between them and you cannot attribute a clean year-over-year jump across a season you never measured. This is what compute_ever_btog in build_eyp_career.py does. 70 transitions across 63 players.
+- Inclusive (treat 2020 and 2022 as a player's consecutive qualifying seasons): the 9 COVID-gap crossings count. 79 transitions across 69 players.
 
-### Watchlist
+**Points delta when a transition happens.**
 
-The watchlist is the BLUE quadrant filtered further:
+| | Exclusive (70 tr / 63 pl) | Inclusive (79 tr / 69 pl) |
+| --- | --- | --- |
+| Raw delta, mean / median | +17.0 / +16 | +18.4 / +17 |
+| Raw, percent positive | 100% | 100% |
+| Per-82 delta, mean / median | +13.2 / +11.3 | +14.5 / +12.6 |
+| Per-82, percent positive | 91.4% | 92.4% |
 
-- Age ≤ 25 (end-of-season integer age: `season_year − birth_year`)
-- Points ≥ 25 in the season
-- GP ≥ 40 (inherited from eligibility floor)
+The raw figure is impressive and almost entirely an artifact. BLUE is below the bar and GREEN is at or above it, so a btog transition is by construction a player crossing the bar from below. The points had to go up. The 100-percent-positive figure is forced by the selection rule, not evidence about grit, and should be reported as such. Pace-adjusting to per-82 is the honest magnitude: about +13 to +14.5 points depending on definition. The inclusive number runs hotter because the 9 COVID-gap crossings cross the short 2020 season (about 62 games for those players) into a full 2022, and that games-played gap inflates the raw jump. The exclusive +13.2 per-82 is the conservative figure to lead with.
 
-Age is sourced from the `players` SQL table (populated by `scrape_players.py`). Players with a NULL birth year are excluded from the watchlist but remain in the full quadrant output.
+### The finding that matters: GRIT does not predict the jump
 
-The points floor (≥ 25) is not a hard threshold baked into the framework design — it's a practical filter to separate "high-GRIT young forward who is close to the median" from "high-GRIT young forward on a fourth line with 12 points." The EYP thesis is about deployment-limited upside, not pure grinders.
+The delta analysis only describes transitions that happened. The real question is the base rate, and whether blue-season GRIT forecasts who crosses.
 
-### Headline filter
+**Base rate.** Of BLUE forwards with a qualifying next season, only about 13 percent reach the bar the following year (13.2% exclusive, 13.8% inclusive). The dominant outcome for a BLUE forward is to stay BLUE. The watchlist quadrant is mostly a holding pattern.
 
-The headline filter is a tighter cut of the watchlist for public-facing output:
+**Does blue-season GRIT forecast the jump? No, and on the absolute bar it is a mild negative signal.** Forwards who crossed had LOWER blue-season grit-z than those who stayed (0.67 vs 0.99 exclusive, p = 0.0012; 0.65 vs 0.99 inclusive, p = 0.0002). In a logistic model the grit-z coefficient is below 1 per SD (odds ratio about 0.66). What forecasts the jump is proximity to the bar (a BLUE forward close to 41 points is far likelier to cross than one 20 below) and age. Grit adds nothing on top of those, and if anything cuts against the jump. That matches hockey sense: the purest grinders are grinders, not scorers-in-waiting.
 
-- All watchlist criteria apply
-- Points gap ≤ 5 from the season median (i.e., within 5 points of qualifying as a GREEN)
+**The control confirms it.** Running the same crossing test on GRAY forwards (low grit, below the bar) is the low-grit analog. Low-grit below-bar forwards reach the bar at about 28 percent (27.7% exclusive, 28.0% inclusive), more than double the BLUE rate of 13 percent. A below-bar forward is MORE likely to start scoring if their grit is low, not high. The proximity mechanism is identical in both pools, so the crossing is regression toward the bar, grit-independent, and high grit is associated with a lower chance of an offensive breakout.
 
-The gap=5 ceiling was set based on 2025-26 gradient analysis. At gap=1, three names qualify (Greig, Sourdif, Minten). At gap=5, two more appear (Samoskevich, Heineman). At gap=7, a name appears (Hryckowian, DAL) who at 30 points vs a 36-point median starts looking more like a role-player plateau than an EYP candidate. Every name at gap ≤ 5 in 2025-26 is a 22-25 year old deployment-limited forward — which is the signal the framework is designed to surface.
+### Corrected framing of EYP
 
-### 2025-26 headline watchlist
+The thesis "high GRIT identifies undervalued forwards about to break out offensively" is not supported. Grit is not the active ingredient, and a filter using only age and points-proximity, with no grit term, would find the same transitions. What survives:
 
-| Player | Team | Age | Gap |
-|---|---|---:|---:|
-| Ridly Greig | OTT | 24 | 1 |
-| Justin Sourdif | WSH | 24 | 1 |
-| Fraser Minten | BOS | 22 | 1 |
-| Matvei Samoskevich | FLA | 24 | 4 |
-| Oliver Heineman | NYI | 25 | 5 |
+- GRIT is the population screen, not the breakout predictor. The BLUE quadrant defines which contested-puck forwards are worth looking at at all. It does not rank them by breakout likelihood.
+- Within that population, age and proximity to the bar do the predicting. The headline watchlist filter (young, close to the bar) is a legitimate screen for likelier breakouts, but the lift comes from age and proximity, not grit.
 
-### Blue-to-Green transitions (ever_btog)
+This is not a problem for GRIT. GRIT was never built to forecast scoring, and Section 0 already states that orthogonality to traditional production is a feature. The btog test confirms grit is orthogonal to scoring trajectory as well, which is consistent with the metric measuring something traditional stats miss rather than a leading indicator of them. The metric's validation rests where it always did: year-over-year repeatability, the team-balance thesis, and bottom-six role evaluation.
 
-The career pivot (`build_eyp_career.py`) tracks multi-season quadrant sequences for all forwards who qualified in at least one season. A Blue-to-Green (btog) transition is defined as a BLUE season followed by a GREEN season in consecutive qualifying years.
+Reporting the grit-z result explicitly is the point of this section. Anyone evaluating the watchlist will run this exact test. Publishing it first, including the negative-control comparison against GRAY, is what makes the framework credible rather than something that collapses on first inspection.
 
-`ever_btog` flags players who have made at least one such transition across their qualifying history. As of the post-fix v3.2 data, 59 players qualify as ever_btog across the 2016-2026 dataset.
+### Reproducibility
 
-The btog pattern is the empirical backbone of the EYP thesis: if BLUE-quadrant players were simply deployment-limited rather than talent-limited, you'd expect to see a meaningful share of them graduate to GREEN when circumstances change. The 59-player ever_btog count across 800 qualifying forwards over 10 seasons is the current evidence base; the thesis would benefit from additional validation work (tabled for v3.2).
-
-### Case study: Josh Doan (Utah)
-
-Josh Doan is used as a canonical EYP case study. He appeared in the BLUE quadrant in 2024-25 — high GRIT contribution with scoring output below the qualifying forward median — and moved to GREEN in 2025-26 as his offensive role expanded. The transition is a clean illustration of the EYP thesis: the GRIT signal was present before the scoring arrived, and deployment was the separating variable.
-
-### Data pipeline notes
-
-- `scrape_scoring.py` populates `skater_scoring` from the NHL `/skater/summary` and `/skater/faceoffwins` endpoints. A deduplication fix was applied in v3.2 (see CHANGELOG) — both endpoints return duplicate `(playerId, teamAbbrevs)` rows for many players, which inflated counting stats 2-3× before the fix.
-- `scrape_players.py` populates the `players` table with birth year data. 2,103 rows as of v3.2; 4 NULL orphans remain (players present in `grit_scores` but not resolved in the NHL player bio endpoint).
-- EYP outputs use `strength = 'all'` from `grit_scores`. Do not join against the 5v5 or PK rows.
-- Traded players retain their full-season counting stats in `skater_scoring` via the `teamAbbrevs` deduplication logic — they are not split by team stint.
+All figures regenerate from the per-season eyp_v31_{year}.csv files (rebuilt on the absolute bar) and eyp_career_v31.csv. The transition set is BLUE in season Y and GREEN in the next qualifying season; the exclusive count uses literal consecutive years only, the inclusive count also accepts the 2020 to 2022 pair. The predictor test links each BLUE forward-season to its next qualifying season and asks whether the player reached the bar (GREEN or RED). pts_gap is bar minus points (positive below the bar).
